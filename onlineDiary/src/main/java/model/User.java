@@ -1,7 +1,10 @@
 package model;
 
 public class User {
-    private int iD;
-    private String first_name;
-    
+    private int id;
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String password;
+    private String username;
 }
