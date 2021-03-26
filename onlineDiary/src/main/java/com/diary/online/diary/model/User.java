@@ -1,16 +1,12 @@
-package model;
+package com.diary.online.diary.model;
 
 
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.Entity;
-
-
 @Setter
 @Getter
 public class User {
-    
     private int id;
     private String firstName;
     private String lastName;
