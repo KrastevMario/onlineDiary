@@ -15,9 +15,11 @@ import javax.servlet.http.HttpSession;
 public class SectionController {
     @Autowired
     SectionService sectionService;
+    @Autowired
+    SessionController sessionController;
 
-    @PutMapping("/user/{user_id}/diary/{diary_id}/addSection")
-    public String addSection(@PathVariable(name = "user_id") int userId, @PathVariable(name = "diary_id") int diaryId,
-                           @RequestBody Section section, HttpSession ses){
+    @PutMapping("/user/diary/{diary_id}/addSection")
+    public String addSection(@PathVariable(name = "diary_id") int diaryId,@RequestBody Section section, HttpSession ses){
+        int userId = sessionController.getLoggedUser(ses).getId();
         return sectionService.addSection(userId,diaryId,section,ses);
     }}

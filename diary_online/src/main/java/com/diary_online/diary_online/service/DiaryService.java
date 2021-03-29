@@ -43,4 +43,8 @@ public class DiaryService {
         diaryRepository.save(diary);
         return "You added diary successful ";
     }
+
+    public Diary getDiary(int diaryId) {
+        return diaryRepository.findById(diaryId).get();
+    }
 }
