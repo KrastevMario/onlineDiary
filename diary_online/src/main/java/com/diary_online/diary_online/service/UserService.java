@@ -47,6 +47,7 @@ public class UserService {
         }
         //verify the integrity of "password"
         String userPassword = user.getPassword();
+<<<<<<< HEAD
         /*
         We use regex to avoid trim() and also because with .length it takes even the spaces
         if(userPassword.length() < 6){
@@ -71,6 +72,14 @@ public class UserService {
             throw new NotSecuredEnoughInputException("The password must contain at least one special character");
         }
          */
+=======
+
+        if(!userPassword.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{6,}$")){
+            throw new NotSecuredEnoughInputException("The password must have at least 6 characters, 1 numeric character," +
+                    " 1 lowercase alphabetical character, 1 uppercase alphabetical character");
+        }
+
+>>>>>>> 503bed51f06350a350b96db59478705cefc9292f
         //hash password
         PasswordEncoder encoder = new BCryptPasswordEncoder();
         String pwdHashed = encoder.encode(userPassword);
@@ -154,8 +163,36 @@ public class UserService {
         fu.getFollowers().add(u);
         userRepository.save(fu);
 
-        return "You follow another user";
+        return "You started following " + fu.getUsername();
     }
 
 
+//    public List<SafeUserDTO> followers(int id) {
+//        List<User> users = userRepository.findBy;
+//    }
 }
+
+
+//Failed code
+/*
+        We use regex to avoid trim() and also because with .length it takes even the spaces
+        if(userPassword.length() < 6){
+            throw new NotSecuredEnoughInputException("The password must have at least 6 characters");
+        }
+*/
+//        if(!userPassword.matches(".{6,}")){
+//            throw new NotSecuredEnoughInputException("The password must have at least 6 characters");
+//        }
+//        if(!userPassword.matches("(?=.*[0-9])")){
+//            throw new NotSecuredEnoughInputException("The password must contain at least 1 numeric character");
+//        }
+//        if(!userPassword.matches("(?=.*[a-z])")){
+//            throw new NotSecuredEnoughInputException("The password must contain at least 1 lowercase alphabetical character");
+//        }
+//        if(!userPassword.matches("(?=.*[A-Z])")){
+//            throw new NotSecuredEnoughInputException("The password must contain at least 1 uppercase\n" +
+//                    "alphabetical character");
+//        }
+//        if(!userPassword.matches("(?=.[!@#\\$%\\^&])")){
+//            throw new NotSecuredEnoughInputException("The password must contain at least one special character");
+//        }

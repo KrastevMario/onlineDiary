@@ -21,7 +21,10 @@ public class UserController extends AbstractController{
     SessionController sessionController;
 
     @PutMapping("/users")
-    public String addUser(@RequestBody User user){
+    public String addUser(@RequestBody User user, HttpSession session){
+        if(sessionController.isLoggedIn(session)){
+            return "You are already logged in";
+        }
         return userService.addUser(user);
     }
 
@@ -52,24 +55,38 @@ public class UserController extends AbstractController{
         return userService.getAllUsers();
     }
 
-    @PutMapping("/users/{user_id}/like/{section_id}")
-    public String likeSection(@PathVariable(name = "user_id") int userId,@PathVariable(name = "section_id") int sectionId, HttpSession session){
+    @PutMapping("/users/like/{section_id}")
+    public String likeSection(@PathVariable(name = "section_id") int sectionId, HttpSession session){
+        //TODO: VERIFICATION
+        int userId = sessionController.getLoggedUser(session).getId();
         return userService.likeSection(userId,sectionId,session);
     }
 
 
-    @PutMapping("/users/{user_id}/dislike/{section_id}")
-    public String dislikeSection(@PathVariable(name = "user_id") int userId,@PathVariable(name = "section_id") int sectionId, HttpSession session){
+    @PutMapping("/users/dislike/{section_id}")
+    public String dislikeSection(@PathVariable(name = "section_id") int sectionId, HttpSession session){
+        //TODO: VERIFICATION
+        int userId = sessionController.getLoggedUser(session).getId();
         return userService.dislikeSection(userId,sectionId,session);
     }
 
-    @PutMapping("/users/{user_id}/share/{section_id}")
-    public String shareSection(@PathVariable(name = "user_id") int userId,@PathVariable(name = "section_id") int sectionId, HttpSession session){
+    @PutMapping("/users/share/{section_id}")
+    public String shareSection(@PathVariable(name = "section_id") int sectionId, HttpSession session){
+        //TODO: Verification
+        int userId = sessionController.getLoggedUser(session).getId();
         return userService.shareSection(userId,sectionId,session);
     }
 
-    @PutMapping("/users/{user_id}/follow/{fuser_id}")
-    public String followUser(@PathVariable(name = "user_id") int userId,@PathVariable(name = "fuser_id") int fuserId, HttpSession session){
+    @PutMapping("/users/follow/{fuser_id}")
+    public String followUser(@PathVariable(name = "fuser_id") int fuserId, HttpSession session){
+        //TODO: Verify
+        int userId = sessionController.getLoggedUser(session).getId();
         return userService.followUser(userId,fuserId,session);
     }
+
+//    @GetMapping("/users/follow")
+//    public List<SafeUserDTO> getMyFollowers(HttpSession session){
+//        SafeUserDTO userId = sessionController.getLoggedUser(session);
+//        return userService.followers(userId.getId());
+//    }
 }

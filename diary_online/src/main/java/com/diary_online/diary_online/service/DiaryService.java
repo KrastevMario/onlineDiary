@@ -41,6 +41,11 @@ public class DiaryService {
         diary.setOwner(owner);
         diary.setCreatedAt(LocalDateTime.now());
         diaryRepository.save(diary);
-        return "You added diary successful ";
+        return "You successfully added the diary " + diary.getTitle();
+    }
+
+    public Diary getDiary(int diaryId) {
+        //TODO: VERIFY if diary exists
+        return diaryRepository.findById(diaryId).get();
     }
 }
