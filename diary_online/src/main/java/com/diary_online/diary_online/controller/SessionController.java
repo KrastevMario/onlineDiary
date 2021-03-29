@@ -39,4 +39,8 @@ public class SessionController extends AbstractController{
     public void logoutUser(HttpSession ses) {
         ses.invalidate();
     }
+
+    public boolean isLoggedIn(HttpSession session){
+        return session.getAttribute("LOGGED_USER_ID") != null;
+    }
 }

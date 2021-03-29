@@ -27,6 +27,11 @@ public class UserController extends AbstractController{
 
     @PostMapping("/users")
     public String loginUser(@RequestBody LoginUserDTO loginCredentials, HttpSession session){
+        //check if user is already logged in
+        if(sessionController.isLoggedIn(session)){
+            return "You are already logged in";
+        }
+        //login user
         User user = userService.login(loginCredentials);
         sessionController.loginUser(session, user.getId());
         return "Login Successful!";

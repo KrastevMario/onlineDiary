@@ -1,9 +1,7 @@
 package com.diary_online.diary_online.service;
 
 import com.diary_online.diary_online.controller.SessionController;
-import com.diary_online.diary_online.exceptions.AuthenticationException;
-import com.diary_online.diary_online.exceptions.BadRequestException;
-import com.diary_online.diary_online.exceptions.NotFoundException;
+import com.diary_online.diary_online.exceptions.*;
 import com.diary_online.diary_online.model.dto.LoginUserDTO;
 import com.diary_online.diary_online.model.dto.SafeUserDTO;
 import com.diary_online.diary_online.model.pojo.Comment;
@@ -47,10 +45,33 @@ public class UserService {
         if(userRepository.findByUsername(user.getUsername()) != null){
             throw new BadRequestException("Username already exists!");
         }
-
+        //verify the integrity of "password"
+        String userPassword = user.getPassword();
+        /*
+        We use regex to avoid trim() and also because with .length it takes even the spaces
+        if(userPassword.length() < 6){
+            throw new NotSecuredEnoughInputException("The password must have at least 6 characters");
+        }
+        */
+        if(!userPassword.matches("(?=.{6,})")){
+            throw new NotSecuredEnoughInputException("The password must have at least 6 characters");
+        }
+        if(!userPassword.matches("(?=.*[a-z])")){
+            throw new NotSecuredEnoughInputException("The password must contain at least 1 lowercase alphabetical character");
+        }
+        if(!userPassword.matches("(?=.*[A-Z])")){
+            throw new NotSecuredEnoughInputException("The password must contain at least 1 uppercase\n" +
+                    "alphabetical character");
+        }
+        if(!userPassword.matches("(?=.*[0-9])")){
+            throw new NotSecuredEnoughInputException("The password must contain at least 1 numeric character");
+        }
+        if(!userPassword.matches("(?=.[!@#\\$%\\^&])")){
+            throw new NotSecuredEnoughInputException("The password must contain at least one special character");
+        }
         //hash password
         PasswordEncoder encoder = new BCryptPasswordEncoder();
-        String pwdHashed = encoder.encode(user.getPassword());
+        String pwdHashed = encoder.encode(userPassword);
         //set all data
         user.setPassword(pwdHashed);
         user.setCreatedAt(LocalDateTime.now());
@@ -77,8 +98,11 @@ public class UserService {
     }
 
     public SafeUserDTO getUser(int id) {
-        User user = userRepository.findById(id).get();
-        return new SafeUserDTO(user);
+        Optional<User> user = userRepository.findById(id);
+        if(user.isEmpty()){
+            throw new UserDoesNotExistException("The user does not exist.");
+        }
+        return new SafeUserDTO(user.get());
     }
 
     public SafeUserDTO getCurrentSessionUser(HttpSession session) {

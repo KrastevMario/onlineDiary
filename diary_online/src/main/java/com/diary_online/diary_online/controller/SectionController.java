@@ -19,6 +19,5 @@ public class SectionController {
     @PutMapping("/user/{user_id}/diary/{diary_id}/addSection")
     public String addSection(@PathVariable(name = "user_id") int userId, @PathVariable(name = "diary_id") int diaryId,
                            @RequestBody Section section, HttpSession ses){
-
         return sectionService.addSection(userId,diaryId,section,ses);
     }}

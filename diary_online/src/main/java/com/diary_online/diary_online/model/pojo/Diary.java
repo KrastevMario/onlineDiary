@@ -26,11 +26,11 @@ public class Diary {
 
     @ManyToOne
     @JoinColumn(name="user_id")
-    @JsonBackReference
+    @JsonBackReference("user-diary")
     private User owner;
 
     @OneToMany(mappedBy = "diary")
-    @JsonManagedReference
+    @JsonManagedReference("section-diary")
     List<Section> sections;
 
 }

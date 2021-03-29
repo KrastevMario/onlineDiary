@@ -28,7 +28,7 @@ public class DiaryService {
 
         Optional<User> user = userRepository.findById(userId);
 
-        if(!user.isPresent()){
+        if(user.isEmpty()){
             throw new NotFoundException("User not found");
         }
 

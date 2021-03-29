@@ -30,19 +30,19 @@ public class User {
     private String username;
 
     @OneToMany(mappedBy = "owner")
-    @JsonManagedReference
+    @JsonManagedReference("user-diary")
     List<Diary> diaries;
 
     @ManyToMany(mappedBy = "likers")
-    @JsonBackReference
+    //@JsonBackReference(value = "user-section-liked")
     private List<Section> likedSections;
 
     @ManyToMany(mappedBy = "disLikers")
-    @JsonBackReference
+    //JsonBackReference("user-section-disliked")
     private List<Section> dislikedSections;
 
     @ManyToMany(mappedBy = "usersSharedWith")
-    @JsonBackReference
+    //@JsonBackReference(value = "user-section")
     private List<Section> sharedSections;
 
 
@@ -52,15 +52,15 @@ public class User {
             joinColumns = { @JoinColumn(name = "user_id") },
             inverseJoinColumns = { @JoinColumn(name = "following_user_id") }
     )
-    @JsonManagedReference
+    //@JsonManagedReference(value = "user-user")
     List<User> followers;
 
 
     @ManyToMany(mappedBy = "followers")
-    @JsonBackReference
+    //@JsonBackReference(value = "user-user")
     private List<User> following;
 
     @OneToMany(mappedBy = "commentOwner")
-   // @JsonManagedReference
+    @JsonManagedReference(value = "user-comment")
     List<Comment> comments;
 }

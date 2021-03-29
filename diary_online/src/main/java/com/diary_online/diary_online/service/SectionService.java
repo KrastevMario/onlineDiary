@@ -30,7 +30,7 @@ public class SectionService {
     public String addSection(int userId, int diaryId, Section section, HttpSession ses) {
 
         Optional<User> user = userRepository.findById(userId);
-        if(!user.isPresent()){
+        if(user.isEmpty()){
             throw new NotFoundException("User not found");
         }
 

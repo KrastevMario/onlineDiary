@@ -1,6 +1,7 @@
 package com.diary_online.diary_online.model.pojo;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,7 +27,7 @@ public class Section {
 
     @ManyToOne
     @JoinColumn(name="diary_id")
-    @JsonBackReference
+    @JsonBackReference("section-diary")
     private Diary diary;
 
     @ManyToMany
@@ -35,7 +36,7 @@ public class Section {
             joinColumns = { @JoinColumn(name = "section_id") },
             inverseJoinColumns = { @JoinColumn(name = "user_id") }
     )
-    @JsonManagedReference
+    //@JsonManagedReference(value = "user-section-liked")
     List<User> likers;
 
     @ManyToMany
@@ -44,7 +45,7 @@ public class Section {
             joinColumns = { @JoinColumn(name = "section_id") },
             inverseJoinColumns = { @JoinColumn(name = "user_id") }
     )
-    @JsonManagedReference
+    //@JsonManagedReference("user-section-disliked")
     List<User> disLikers;
 
     @ManyToMany
@@ -53,10 +54,10 @@ public class Section {
             joinColumns = { @JoinColumn(name = "section_id") },
             inverseJoinColumns = { @JoinColumn(name = "user_id") }
     )
-    @JsonManagedReference
+    //@JsonManagedReference(value = "user-section")
     List<User> usersSharedWith;
 
     @OneToMany(mappedBy = "commentSection")
-  //  @JsonManagedReference
+    @JsonManagedReference(value = "section-comment")
     List<Comment> comments;
 }
