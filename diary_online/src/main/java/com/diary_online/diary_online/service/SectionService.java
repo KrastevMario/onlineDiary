@@ -51,4 +51,14 @@ public class SectionService {
         }
         return "Can't find the chosen diary.";
     }
+
+    public String updateSection(int sectionId, Section section) {
+        Section sec = sectionRepository.findById(sectionId).get();
+
+        sec.setPrivacy(section.getPrivacy());
+
+
+        sectionRepository.save(sec);
+        return "section with id " + sectionId + " is updated successful";
+    }
 }

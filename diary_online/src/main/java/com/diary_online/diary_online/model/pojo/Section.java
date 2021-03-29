@@ -23,7 +23,7 @@ public class Section {
     private String title;
     private String content;
     private LocalDateTime createdAt;
-    private boolean isPublic;
+    private String privacy;
 
     @ManyToOne
     @JoinColumn(name="diary_id")
