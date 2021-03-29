@@ -19,13 +19,14 @@ public class DiaryController extends AbstractController{
     @Autowired
     SessionController sessionController;
 
-    @PutMapping("/user/diaries")
+    @PutMapping("/users/diaries")
     public String addDiary(@RequestBody Diary diary, HttpSession ses){
+        //TODO: VERIFICATIONS
         int userId = sessionController.getLoggedUser(ses).getId();
         return diaryService.addDiary(userId,diary,ses);
     }
 
-    @GetMapping("/user/diaries/{diary_id}")
+    @GetMapping("/users/diaries/{diary_id}")
     public Diary getDiary(@RequestParam(value = "diary_id") int diaryId){
         return diaryService.getDiary(diaryId);
     }

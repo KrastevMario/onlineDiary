@@ -18,8 +18,9 @@ public class SectionController {
     @Autowired
     SessionController sessionController;
 
-    @PutMapping("/user/diary/{diary_id}/addSection")
+    @PutMapping("/users/diaries/{diary_id}/addSection")
     public String addSection(@PathVariable(name = "diary_id") int diaryId,@RequestBody Section section, HttpSession ses){
+        //TODO: VERIFY
         int userId = sessionController.getLoggedUser(ses).getId();
         return sectionService.addSection(userId,diaryId,section,ses);
     }}

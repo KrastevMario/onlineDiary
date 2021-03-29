@@ -16,8 +16,9 @@ public class CommentControllers extends AbstractController{
     @Autowired
     SessionController sessionController;
 
-    @PutMapping("/users/comment/{section_id}")
+    @PutMapping("/users/comments/{section_id}")
     public String comment( @RequestBody Comment comment, @PathVariable(name = "section_id") int sectionId, HttpSession session){
+        //TODO: VERIFICATIONS
         int userId = sessionController.getLoggedUser(session).getId();
         return commentService.comment(comment,userId,sectionId,session);
     }

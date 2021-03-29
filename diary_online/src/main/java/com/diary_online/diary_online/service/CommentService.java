@@ -39,6 +39,6 @@ public class CommentService {
 
         commentRepository.save(c);
 
-        return "success";
+        return "comment added successful.";
     }
 }

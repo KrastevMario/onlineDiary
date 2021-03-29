@@ -46,9 +46,9 @@ public class SectionService {
                 section.setCreatedAt(LocalDateTime.now());
                 section.setDiary(d);
                 sectionRepository.save(section);
-                return "Section added successful";
+                return "Section added successful in " + section.getDiary().getTitle();
             }
         }
-        return "Cannot found diary with id " + diaryId + " in your diaries";
+        return "Can't find the chosen diary.";
     }
 }
