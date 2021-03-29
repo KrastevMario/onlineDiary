@@ -53,6 +53,7 @@ public class UserService {
             throw new NotSecuredEnoughInputException("The password must have at least 6 characters");
         }
         */
+        /*
         if(!userPassword.matches("(?=.{6,})")){
             throw new NotSecuredEnoughInputException("The password must have at least 6 characters");
         }
@@ -69,6 +70,7 @@ public class UserService {
         if(!userPassword.matches("(?=.[!@#\\$%\\^&])")){
             throw new NotSecuredEnoughInputException("The password must contain at least one special character");
         }
+         */
         //hash password
         PasswordEncoder encoder = new BCryptPasswordEncoder();
         String pwdHashed = encoder.encode(userPassword);
