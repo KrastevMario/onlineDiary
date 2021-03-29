@@ -58,8 +58,11 @@ public class UserController extends AbstractController{
     @PutMapping("/users/like/{section_id}")
     public String likeSection(@PathVariable(name = "section_id") int sectionId, HttpSession session){
         //TODO: VERIFICATION
+        if(!sessionController.isLoggedIn(session)){
+            return "You are not logged in";
+        }
         int userId = sessionController.getLoggedUser(session).getId();
-        return userService.likeSection(userId,sectionId,session);
+        return userService.likeSection(userId,sectionId);
     }
 
 

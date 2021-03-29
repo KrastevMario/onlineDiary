@@ -104,7 +104,7 @@ public class UserService {
         return safeUsers;
     }
 
-    public String likeSection(int userId,int sectionId, HttpSession session) {
+    public String likeSection(int userId,int sectionId) {
 
         Section s = sectionRepository.findById(sectionId).get();
         User u = userRepository.findById(userId).get();
