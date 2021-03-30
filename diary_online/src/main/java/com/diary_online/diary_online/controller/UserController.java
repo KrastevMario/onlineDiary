@@ -88,6 +88,9 @@ public class UserController extends AbstractController{
 
     @GetMapping("/user/sections")
     public List<SectionFromDbDTO> getMySection(HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to use this option.");
+        }
         int userId = sessionController.getLoggedUser(session).getId();
         return userService.getMySections(userId);
     }
@@ -101,6 +104,7 @@ public class UserController extends AbstractController{
 
     @PostMapping("/users/edit")
     public String updateUser(@RequestBody User user, HttpSession session){
+        //TODO: Verify
         if(sessionController.isLoggedIn(session)){
             int myId = sessionController.getLoggedUser(session).getId();
             return userService.updateUser(user,myId);
@@ -113,12 +117,18 @@ public class UserController extends AbstractController{
 
     @GetMapping("/users/followers")
     public List<UserFromDbDTO> myFollowers(HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to use this option.");
+        }
         int userId = sessionController.getLoggedUser(session).getId();
         return userService.showMyFollowers(userId);
     }
 
     @GetMapping("/user/shared/sections")
     public List<SectionFromDbDTO> getSharedSectionsWitMe(HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to use this option.");
+        }
         int userId = sessionController.getLoggedUser(session).getId();
         return userService.showSharedSectionsWithMe(userId);
     }

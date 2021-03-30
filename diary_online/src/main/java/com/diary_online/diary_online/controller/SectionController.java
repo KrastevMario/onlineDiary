@@ -32,7 +32,7 @@ public class SectionController {
             return "You are not logged in. You must login to be able to like a section.";
         }
         int userId = sessionController.getLoggedUser(session).getId();
-        return userService.likeSection(userId,sectionId);
+        return sectionService.likeSection(userId,sectionId);
     }
 
     @PostMapping("/sections/{section_id}")
@@ -47,14 +47,14 @@ public class SectionController {
             return "You are not logged in. Please log in.";
         }
         int userId = sessionController.getLoggedUser(session).getId();
-        return userService.dislikeSection(userId,sectionId,session);
+        return sectionService.dislikeSection(userId,sectionId,session);
     }
 
     @PutMapping("/shares/{section_id}/users/{user_id}")
     public String shareSection(@PathVariable(name = "section_id") int sectionId, @PathVariable(name = "user_id") int userId,HttpSession session){
         //TODO: Verification
         if(sessionController.isLoggedIn(session)){
-            return userService.shareSection(userId,sectionId);
+            return sectionService.shareSection(userId,sectionId);
         }
         else{
             return "You are not logged in. Please log in.";
@@ -65,7 +65,7 @@ public class SectionController {
     public String unshareSection(@PathVariable(name = "section_id") int sectionId, @PathVariable(name = "user_id") int userId,HttpSession session){
         //TODO: Verification
         if(sessionController.isLoggedIn(session)){
-            return userService.unshareSection(userId,sectionId);
+            return sectionService.unshareSection(userId,sectionId);
         }
         else{
             return "You are not logged in";

@@ -1,14 +1,17 @@
 package com.diary_online.diary_online.service;
 
 import com.diary_online.diary_online.controller.SessionController;
+import com.diary_online.diary_online.exceptions.AuthenticationException;
 import com.diary_online.diary_online.exceptions.BadRequestException;
 import com.diary_online.diary_online.exceptions.NotFoundException;
+import com.diary_online.diary_online.model.dao.UserDAO;
 import com.diary_online.diary_online.model.dto.SafeUserDTO;
 import com.diary_online.diary_online.model.pojo.Diary;
 import com.diary_online.diary_online.model.pojo.Section;
 import com.diary_online.diary_online.model.pojo.User;
 import com.diary_online.diary_online.repository.SectionRepository;
 import com.diary_online.diary_online.repository.UserRepository;
+import com.diary_online.diary_online.util.UtilUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -60,5 +63,58 @@ public class SectionService {
 
         sectionRepository.save(sec);
         return "section with id " + sectionId + " is updated successful";
+    }
+
+    public String likeSection(int userId, int sectionId) {
+        //check if the section and user exists
+        if(sectionRepository.findById(sectionId).isEmpty()){
+            return "The section you are trying to like is invalid.";
+        }
+        if(userRepository.findById(userId).isEmpty()){
+            return "The user cannot like this section.";
+        }
+
+        Section section = sectionRepository.findById(sectionId).get();
+        User user = userRepository.findById(userId).get();
+        //check if the section is public. If it is NOT, verify if the user can like it.
+        if(!UtilUser.isVisible(section)){
+            if(UserDAO.isSectionSharedUser(section, user)){
+                if(UserDAO.hasUserLikedSection(user, section)){
+                    return "You already liked this section (" + section.getTitle() + "). Cannot double like.";
+                }
+            }else{
+                throw new AuthenticationException("You don't have the permission to like this section.");
+            }
+        }
+        section.getLikers().add(user);
+        sectionRepository.save(section);
+        return "You liked the section with title \"" + section.getTitle() + "\"";
+    }
+
+    public String dislikeSection(int userId, int sectionId, HttpSession session) {
+        //TODO: verify
+        Section s = sectionRepository.findById(sectionId).get();
+        User u = userRepository.findById(userId).get();
+        s.getDisLikers().add(u);
+        sectionRepository.save(s);
+        return "You disliked section with id : " + sectionId;
+    }
+
+    public String shareSection(int userId, int sectionId) {
+        //TODO: verify
+        Section s = sectionRepository.findById(sectionId).get();
+        User u = userRepository.findById(userId).get();
+        s.getUsersSharedWith().add(u);
+        sectionRepository.save(s);
+        return "You shared section with id : " + sectionId + " with user with id " + userId;
+    }
+
+    public String unshareSection(int userId, int sectionId) {
+        //TODO: verify
+        Section s = sectionRepository.findById(sectionId).get();
+        User u = userRepository.findById(userId).get();
+        s.getUsersSharedWith().remove(u);
+        sectionRepository.save(s);
+        return "You unshared section with id : " + sectionId + " with user with id " + userId;
     }
 }

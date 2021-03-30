@@ -105,50 +105,6 @@ public class UserService {
         return safeUsers;
     }
 
-    public String likeSection(int userId, int sectionId) {
-        //check if the section and user exists
-        if(sectionRepository.findById(sectionId).isEmpty()){
-            return "The section you are trying to like is invalid.";
-        }
-        if(userRepository.findById(userId).isEmpty()){
-            return "The user cannot like this section.";
-        }
-
-        Section section = sectionRepository.findById(sectionId).get();
-        User user = userRepository.findById(userId).get();
-        //check if the section is public. If it is NOT, verify if the user can like it.
-        if(!UtilUser.isVisible(section)){
-            if(UserDAO.isSectionSharedUser(section, user)){
-                if(UserDAO.hasUserLikedSection(user, section)){
-                    return "You already liked this section (" + section.getTitle() + "). Cannot double like.";
-                }
-            }else{
-                throw new AuthenticationException("You don't have the permission to like this section.");
-            }
-        }
-        section.getLikers().add(user);
-        sectionRepository.save(section);
-        return "You liked the section with title \"" + section.getTitle() + "\"";
-    }
-
-    public String dislikeSection(int userId, int sectionId, HttpSession session) {
-        //TODO: verify
-        Section s = sectionRepository.findById(sectionId).get();
-        User u = userRepository.findById(userId).get();
-        s.getDisLikers().add(u);
-        sectionRepository.save(s);
-        return "You disliked section with id : " + sectionId;
-    }
-
-    public String shareSection(int userId, int sectionId) {
-        //TODO: verify
-        Section s = sectionRepository.findById(sectionId).get();
-        User u = userRepository.findById(userId).get();
-        s.getUsersSharedWith().add(u);
-        sectionRepository.save(s);
-        return "You shared section with id : " + sectionId + " with user with id " + userId;
-    }
-
     public String followUser(int userId, int userToFollowId) {
         //check if the user exists
         if (userRepository.findById(userId).isEmpty()) {
@@ -171,17 +127,7 @@ public class UserService {
         return "You started following " + userToFollow.getUsername();
     }
 
-    public String unshareSection(int userId, int sectionId) {
-        //TODO: verify
-        Section s = sectionRepository.findById(sectionId).get();
-        User u = userRepository.findById(userId).get();
-        s.getUsersSharedWith().remove(u);
-        sectionRepository.save(s);
-        return "You unshared section with id : " + sectionId + " with user with id " + userId;
-    }
-
     public List<SectionFromDbDTO> getPublicSectionFromFollowedUsers(int userId) {
-        //TODO: Verify
         if(userRepository.findById(userId).isEmpty()){
             throw new BadRequestException("There was a problem reading the user's Id.");
         }
@@ -189,6 +135,9 @@ public class UserService {
     }
 
     public List<SectionFromDbDTO> getMySections(int userId) {
+        if(userRepository.findById(userId).isEmpty()){
+            throw new BadRequestException("The user is invalid.");
+        }
         return UserDAO.showAllMySection(userId);
     }
 
@@ -227,12 +176,16 @@ public class UserService {
     }
 
     public List<UserFromDbDTO> showMyFollowers(int userId) {
-        //TODO: verify
+        if(userRepository.findById(userId).isEmpty()){
+            throw new BadRequestException("The user is invalid.");
+        }
         return UserDAO.showFollowers(userId);
     }
 
     public List<SectionFromDbDTO> showSharedSectionsWithMe(int userId) {
-        //TODO: verify
+        if(userRepository.findById(userId).isEmpty()){
+            throw new BadRequestException("The user is invalid.");
+        }
         return SectionDBDao.getSharedWithMeSection(userId);
     }
 }

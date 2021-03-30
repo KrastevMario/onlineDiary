@@ -40,8 +40,7 @@ public class UserDAO {
                 "join users as u on u.id = d.user_id\n" +
                 "where u.id = ?\n" +
                 "order by s.created_at desc";
-        try {
-            PreparedStatement ps = c.prepareStatement(sql);
+        try(PreparedStatement ps = c.prepareStatement(sql);) {
             ps.setInt(1, userId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()){
@@ -67,8 +66,7 @@ public class UserDAO {
         String sql = "select u.first_name,u.last_name,u.email,u.username from users as u\n" +
                 "join users_have_followers as uhf on uhf.following_user_id = u.id\n" +
                 "where uhf.user_id = ?;";
-        try {
-            PreparedStatement ps = c.prepareStatement(sql);
+        try(PreparedStatement ps = c.prepareStatement(sql);) {
             ps.setInt(1, myId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()){
