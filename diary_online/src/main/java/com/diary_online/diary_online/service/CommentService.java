@@ -1,5 +1,6 @@
 package com.diary_online.diary_online.service;
 
+import com.diary_online.diary_online.model.dao.CommentDAO;
 import com.diary_online.diary_online.model.pojo.Comment;
 import com.diary_online.diary_online.model.pojo.Section;
 import com.diary_online.diary_online.model.pojo.User;
@@ -24,7 +25,7 @@ public class CommentService {
     @Autowired
     SectionRepository sectionRepository;
 
-    public String comment( Comment comment ,int userId, int sectionId, HttpSession session) {
+    public String addComment( Comment comment ,int userId, int sectionId) {
 
         Optional<User> user = userRepository.findById(userId);
 
@@ -40,5 +41,10 @@ public class CommentService {
         commentRepository.save(c);
 
         return "comment added successful.";
+    }
+
+    public String deleteComment(int userId, int sectionId) {
+        commentRepository.deleteById(CommentDAO.findCommentByUserAndSectionId(userId,sectionId));
+        return "you delete comment successful";
     }
 }

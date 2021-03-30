@@ -5,10 +5,14 @@ import com.diary_online.diary_online.exceptions.*;
 import com.diary_online.diary_online.model.dao.UserDAO;
 import com.diary_online.diary_online.model.dto.LoginUserDTO;
 import com.diary_online.diary_online.model.dto.SafeUserDTO;
+import com.diary_online.diary_online.model.dao.SectionDBDao;
+import com.diary_online.diary_online.model.dto.SectionFromDbDTO;
+import com.diary_online.diary_online.model.dto.UserFromDbDTO;
 import com.diary_online.diary_online.model.pojo.Section;
 import com.diary_online.diary_online.model.pojo.User;
 import com.diary_online.diary_online.repository.SectionRepository;
 import com.diary_online.diary_online.repository.UserRepository;
+import com.diary_online.diary_online.util.UtilUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -37,13 +41,13 @@ public class UserService {
 
     public String addUser(User user) {
         //verify all data
-        if(user == null){
+        if (user == null) {
             return "Invalid info!";
         }
-        if(userRepository.findByEmail(user.getEmail()) != null){
+        if (userRepository.findByEmail(user.getEmail()) != null) {
             throw new BadRequestException("Email already exists!");
         }
-        if(userRepository.findByUsername(user.getUsername()) != null){
+        if (userRepository.findByUsername(user.getUsername()) != null) {
             throw new BadRequestException("Username already exists!");
         }
         //verify the integrity of "password"
@@ -66,15 +70,13 @@ public class UserService {
 
     public User login(LoginUserDTO loginCredentials) {
         User user = userRepository.findByUsername(loginCredentials.getUsername());
-        if(user == null){
+        if (user == null) {
             throw new AuthenticationException("Invalid Credentials!");
-        }
-        else{
+        } else {
             PasswordEncoder encoder = new BCryptPasswordEncoder();
-            if(encoder.matches(loginCredentials.getPassword(), user.getPassword())){
+            if (encoder.matches(loginCredentials.getPassword(), user.getPassword())) {
                 return user;
-            }
-            else{
+            } else {
                 throw new AuthenticationException("Invalid Credentials!");
             }
         }
@@ -82,7 +84,7 @@ public class UserService {
 
     public SafeUserDTO getUser(int id) {
         Optional<User> user = userRepository.findById(id);
-        if(user.isEmpty()){
+        if (user.isEmpty()) {
             throw new UserDoesNotExistException("The user does not exist.");
         }
         return new SafeUserDTO(user.get());
@@ -96,23 +98,41 @@ public class UserService {
         List<User> users = userRepository.findAll();
         List<SafeUserDTO> safeUsers = new ArrayList<>();
 
-        for (User u: users) {
+        for (User u : users) {
             safeUsers.add(new SafeUserDTO(u));
         }
 
         return safeUsers;
     }
 
-    public String likeSection(int userId,int sectionId) {
+    public String likeSection(int userId, int sectionId) {
+        //check if the section and user exists
+        if(sectionRepository.findById(sectionId).isEmpty()){
+            return "The section you are trying to like is invalid.";
+        }
+        if(userRepository.findById(userId).isEmpty()){
+            return "The user cannot like this section.";
+        }
 
-        Section s = sectionRepository.findById(sectionId).get();
-        User u = userRepository.findById(userId).get();
-        s.getLikers().add(u);
-        sectionRepository.save(s);
-        return "You liked section with id : " + sectionId;
+        Section section = sectionRepository.findById(sectionId).get();
+        User user = userRepository.findById(userId).get();
+        //check if the section is public. If it is NOT, verify if the user can like it.
+        if(!UtilUser.isVisible(section)){
+            if(UserDAO.isSectionSharedUser(section, user)){
+                if(UserDAO.hasUserLikedSection(user, section)){
+                    return "You already liked this section (" + section.getTitle() + "). Cannot double like.";
+                }
+            }else{
+                throw new AuthenticationException("You don't have the permission to like this section.");
+            }
+        }
+        section.getLikers().add(user);
+        sectionRepository.save(section);
+        return "You liked the section with title \"" + section.getTitle() + "\"";
     }
 
     public String dislikeSection(int userId, int sectionId, HttpSession session) {
+        //TODO: verify
         Section s = sectionRepository.findById(sectionId).get();
         User u = userRepository.findById(userId).get();
         s.getDisLikers().add(u);
@@ -120,7 +140,8 @@ public class UserService {
         return "You disliked section with id : " + sectionId;
     }
 
-    public String shareSection(int userId, int sectionId, HttpSession session) {
+    public String shareSection(int userId, int sectionId) {
+        //TODO: verify
         Section s = sectionRepository.findById(sectionId).get();
         User u = userRepository.findById(userId).get();
         s.getUsersSharedWith().add(u);
@@ -130,54 +151,88 @@ public class UserService {
 
     public String followUser(int userId, int userToFollowId) {
         //check if the user exists
-        if(userRepository.findById(userId).isEmpty()){
+        if (userRepository.findById(userId).isEmpty()) {
             return "Something went wrong while trying to execute your request.";
         }
         //check if the follower exists
-        if(userRepository.findById(userToFollowId).isEmpty()){
+        if (userRepository.findById(userToFollowId).isEmpty()) {
             return "You are trying to follow an invalid user.";
         }
         //check if the user is already following the followedUser
-        if(userDao.isAlreadyFollowing(userId, userToFollowId)){
+        if (UserDAO.isAlreadyFollowing(userId, userToFollowId)) {
             return "You are already following this user. Cannot follow twice the same user.";
         }
 
         User user = userRepository.findById(userId).get();
         User userToFollow = userRepository.findById(userToFollowId).get();
-
         userToFollow.getFollowers().add(user);
         userRepository.save(userToFollow);
 
         return "You started following " + userToFollow.getUsername();
     }
 
+    public String unshareSection(int userId, int sectionId) {
+        //TODO: verify
+        Section s = sectionRepository.findById(sectionId).get();
+        User u = userRepository.findById(userId).get();
+        s.getUsersSharedWith().remove(u);
+        sectionRepository.save(s);
+        return "You unshared section with id : " + sectionId + " with user with id " + userId;
+    }
 
-//    public List<SafeUserDTO> followers(int id) {
-//        List<User> users = userRepository.findBy;
-//    }
-}
-
-
-//Failed code
-/*
-        We use regex to avoid trim() and also because with .length it takes even the spaces
-        if(userPassword.length() < 6){
-            throw new NotSecuredEnoughInputException("The password must have at least 6 characters");
+    public List<SectionFromDbDTO> getPublicSectionFromFollowedUsers(int userId) {
+        //TODO: Verify
+        if(userRepository.findById(userId).isEmpty()){
+            throw new BadRequestException("There was a problem reading the user's Id.");
         }
-*/
-//        if(!userPassword.matches(".{6,}")){
-//            throw new NotSecuredEnoughInputException("The password must have at least 6 characters");
-//        }
-//        if(!userPassword.matches("(?=.*[0-9])")){
-//            throw new NotSecuredEnoughInputException("The password must contain at least 1 numeric character");
-//        }
-//        if(!userPassword.matches("(?=.*[a-z])")){
-//            throw new NotSecuredEnoughInputException("The password must contain at least 1 lowercase alphabetical character");
-//        }
-//        if(!userPassword.matches("(?=.*[A-Z])")){
-//            throw new NotSecuredEnoughInputException("The password must contain at least 1 uppercase\n" +
-//                    "alphabetical character");
-//        }
-//        if(!userPassword.matches("(?=.[!@#\\$%\\^&])")){
-//            throw new NotSecuredEnoughInputException("The password must contain at least one special character");
-//        }
+        return SectionDBDao.getPublicSectionsFollowedByMe(userId);
+    }
+
+    public List<SectionFromDbDTO> getMySections(int userId) {
+        return UserDAO.showAllMySection(userId);
+    }
+
+    public String unfollowUser(int userId, int fuserId) {
+        //TODO: verify
+        User u = userRepository.findById(userId).get();
+        User fu = userRepository.findById(fuserId).get();
+
+        fu.getFollowers().remove(u);
+        userRepository.save(fu);
+
+        return "You unfollow " + fu.getUsername();
+    }
+
+    public String updateUser(User user, int myId) {
+        //TODO: verify all data
+        if (user == null) {
+            return "Invalid info!";
+        }
+        if (userRepository.findByEmail(user.getEmail()) != null) {
+            throw new BadRequestException("Email already exists!");
+        }
+        if (userRepository.findByUsername(user.getUsername()) != null) {
+            throw new BadRequestException("Username already exists!");
+        }
+
+        User me = userRepository.findById(myId).get();
+        me.setFirstName(user.getFirstName());
+        me.setLastName(user.getLastName());
+        me.setEmail(user.getEmail());
+        me.setUsername(user.getUsername());
+
+        userRepository.save(me);
+
+        return "Successful updating";
+    }
+
+    public List<UserFromDbDTO> showMyFollowers(int userId) {
+        //TODO: verify
+        return UserDAO.showFollowers(userId);
+    }
+
+    public List<SectionFromDbDTO> showSharedSectionsWithMe(int userId) {
+        //TODO: verify
+        return SectionDBDao.getSharedWithMeSection(userId);
+    }
+}
