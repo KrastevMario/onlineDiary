@@ -86,7 +86,7 @@ public class UserController extends AbstractController{
         return userService.getPublicSectionFromFollowedUsers(userId);
     }
 
-    @GetMapping("/user/sections")
+    @GetMapping("/users/sections")
     public List<SectionFromDbDTO> getMySection(HttpSession session){
         if(!sessionController.isLoggedIn(session)){
             throw new AuthenticationException("You must be logged in to use this option.");
@@ -95,19 +95,18 @@ public class UserController extends AbstractController{
         return userService.getMySections(userId);
     }
 
-    @DeleteMapping("/users/unfollow/{fuser_id}")
-    public String unfollowUser(@PathVariable(name = "fuser_id") int fuserId, HttpSession session){
-        //TODO: Verify
+    @DeleteMapping("/users/unfollow/{userToUnfollow}")
+    public String unfollowUser(@PathVariable(name = "userToUnfollow") int userToUnfollow, HttpSession session){
         int userId = sessionController.getLoggedUser(session).getId();
-        return userService.unfollowUser(userId,fuserId);
+        return userService.unfollowUser(userId,userToUnfollow);
     }
 
     @PostMapping("/users/edit")
-    public String updateUser(@RequestBody User user, HttpSession session){
+    public String updateUser(@RequestBody User userNewInfo, HttpSession session){
         //TODO: Verify
         if(sessionController.isLoggedIn(session)){
             int myId = sessionController.getLoggedUser(session).getId();
-            return userService.updateUser(user,myId);
+            return userService.updateUser(userNewInfo,myId);
         }
         else{
             return "You are not logged in";
@@ -124,7 +123,7 @@ public class UserController extends AbstractController{
         return userService.showMyFollowers(userId);
     }
 
-    @GetMapping("/user/shared/sections")
+    @GetMapping("/users/shared/sections")
     public List<SectionFromDbDTO> getSharedSectionsWitMe(HttpSession session){
         if(!sessionController.isLoggedIn(session)){
             throw new AuthenticationException("You must be logged in to use this option.");
