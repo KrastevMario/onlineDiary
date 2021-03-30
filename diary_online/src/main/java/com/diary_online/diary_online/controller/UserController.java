@@ -3,6 +3,8 @@ package com.diary_online.diary_online.controller;
 
 import com.diary_online.diary_online.model.dto.LoginUserDTO;
 import com.diary_online.diary_online.model.dto.SafeUserDTO;
+import com.diary_online.diary_online.model.dto.SectionFromDbDTO;
+import com.diary_online.diary_online.model.dto.UserFromDbDTO;
 import com.diary_online.diary_online.model.pojo.Comment;
 import com.diary_online.diary_online.model.pojo.User;
 import com.diary_online.diary_online.service.UserService;
@@ -70,11 +72,28 @@ public class UserController extends AbstractController{
         return userService.dislikeSection(userId,sectionId,session);
     }
 
-    @PutMapping("/users/share/{section_id}")
-    public String shareSection(@PathVariable(name = "section_id") int sectionId, HttpSession session){
+    @PutMapping("/share/{section_id}/user/{user_id}")
+    public String shareSection(@PathVariable(name = "section_id") int sectionId, @PathVariable(name = "user_id") int userId,HttpSession session){
         //TODO: Verification
-        int userId = sessionController.getLoggedUser(session).getId();
-        return userService.shareSection(userId,sectionId,session);
+        if(sessionController.isLoggedIn(session)){
+            return userService.shareSection(userId,sectionId);
+        }
+        else{
+            return "You are not logged in";
+        }
+
+    }
+
+    @DeleteMapping("/unshare/{section_id}/user/{user_id}")
+    public String unshareSection(@PathVariable(name = "section_id") int sectionId, @PathVariable(name = "user_id") int userId,HttpSession session){
+        //TODO: Verification
+        if(sessionController.isLoggedIn(session)){
+            return userService.unshareSection(userId,sectionId);
+        }
+        else{
+            return "You are not logged in";
+        }
+
     }
 
     @PutMapping("/users/follow/{fuser_id}")
@@ -84,9 +103,48 @@ public class UserController extends AbstractController{
         return userService.followUser(userId,fuserId,session);
     }
 
-//    @GetMapping("/users/follow")
-//    public List<SafeUserDTO> getMyFollowers(HttpSession session){
-//        SafeUserDTO userId = sessionController.getLoggedUser(session);
-//        return userService.followers(userId.getId());
-//    }
+    @GetMapping("/followedUsers/public/section")
+    public List<SectionFromDbDTO> getPublicSectionFromFollowedUsers( HttpSession session){
+
+        int userId = sessionController.getLoggedUser(session).getId();
+        return userService.getPublicSectionFromFollowedUsers(userId);
+    }
+
+    @GetMapping("/user/sections")
+    public List<SectionFromDbDTO> getMySection(HttpSession session){
+        int userId = sessionController.getLoggedUser(session).getId();
+        return userService.getMySections(userId);
+    }
+
+    @DeleteMapping("/users/unfollow/{fuser_id}")
+    public String unfollowUser(@PathVariable(name = "fuser_id") int fuserId, HttpSession session){
+        //TODO: Verify
+        int userId = sessionController.getLoggedUser(session).getId();
+        return userService.unfollowUser(userId,fuserId);
+    }
+
+    @PostMapping("/users/edit")
+    public String updateUser(@RequestBody User user, HttpSession session){
+        if(sessionController.isLoggedIn(session)){
+            int myId = sessionController.getLoggedUser(session).getId();
+            return userService.updateUser(user,myId);
+        }
+        else{
+            return "You are not logged in";
+        }
+
+    }
+
+    @GetMapping("/users/followers")
+    public List<UserFromDbDTO> myFollowers(HttpSession session){
+        int userId = sessionController.getLoggedUser(session).getId();
+        return userService.showMyFollowers(userId);
+    }
+
+    @GetMapping("/user/shared/sections")
+    public List<SectionFromDbDTO> getSharedSectionsWitMe(HttpSession session){
+        int userId = sessionController.getLoggedUser(session).getId();
+        return userService.showSharedSectionsWithMe(userId);
+    }
+
 }

@@ -2,8 +2,12 @@ package com.diary_online.diary_online.service;
 
 import com.diary_online.diary_online.controller.SessionController;
 import com.diary_online.diary_online.exceptions.*;
+import com.diary_online.diary_online.model.dao.SectionDBDao;
+import com.diary_online.diary_online.model.dao.UserDAO;
 import com.diary_online.diary_online.model.dto.LoginUserDTO;
 import com.diary_online.diary_online.model.dto.SafeUserDTO;
+import com.diary_online.diary_online.model.dto.SectionFromDbDTO;
+import com.diary_online.diary_online.model.dto.UserFromDbDTO;
 import com.diary_online.diary_online.model.pojo.Comment;
 import com.diary_online.diary_online.model.pojo.Section;
 import com.diary_online.diary_online.model.pojo.User;
@@ -36,50 +40,25 @@ public class UserService {
 
     public String addUser(User user) {
         //verify all data
-        if(user == null){
+        if (user == null) {
             return "Invalid info!";
         }
-        if(userRepository.findByEmail(user.getEmail()) != null){
+        if (userRepository.findByEmail(user.getEmail()) != null) {
             throw new BadRequestException("Email already exists!");
         }
-        if(userRepository.findByUsername(user.getUsername()) != null){
+        if (userRepository.findByUsername(user.getUsername()) != null) {
             throw new BadRequestException("Username already exists!");
         }
         //verify the integrity of "password"
         String userPassword = user.getPassword();
-<<<<<<< HEAD
-        /*
-        We use regex to avoid trim() and also because with .length it takes even the spaces
-        if(userPassword.length() < 6){
-            throw new NotSecuredEnoughInputException("The password must have at least 6 characters");
-        }
-        */
-        /*
-        if(!userPassword.matches("(?=.{6,})")){
-            throw new NotSecuredEnoughInputException("The password must have at least 6 characters");
-        }
-        if(!userPassword.matches("(?=.*[a-z])")){
-            throw new NotSecuredEnoughInputException("The password must contain at least 1 lowercase alphabetical character");
-        }
-        if(!userPassword.matches("(?=.*[A-Z])")){
-            throw new NotSecuredEnoughInputException("The password must contain at least 1 uppercase\n" +
-                    "alphabetical character");
-        }
-        if(!userPassword.matches("(?=.*[0-9])")){
-            throw new NotSecuredEnoughInputException("The password must contain at least 1 numeric character");
-        }
-        if(!userPassword.matches("(?=.[!@#\\$%\\^&])")){
-            throw new NotSecuredEnoughInputException("The password must contain at least one special character");
-        }
-         */
-=======
 
-        if(!userPassword.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{6,}$")){
+
+        if (!userPassword.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{6,}$")) {
             throw new NotSecuredEnoughInputException("The password must have at least 6 characters, 1 numeric character," +
                     " 1 lowercase alphabetical character, 1 uppercase alphabetical character");
         }
 
->>>>>>> 503bed51f06350a350b96db59478705cefc9292f
+
         //hash password
         PasswordEncoder encoder = new BCryptPasswordEncoder();
         String pwdHashed = encoder.encode(userPassword);
@@ -94,15 +73,13 @@ public class UserService {
 
     public User login(LoginUserDTO loginCredentials) {
         User user = userRepository.findByUsername(loginCredentials.getUsername());
-        if(user == null){
+        if (user == null) {
             throw new AuthenticationException("Invalid Credentials!");
-        }
-        else{
+        } else {
             PasswordEncoder encoder = new BCryptPasswordEncoder();
-            if(encoder.matches(loginCredentials.getPassword(), user.getPassword())){
+            if (encoder.matches(loginCredentials.getPassword(), user.getPassword())) {
                 return user;
-            }
-            else{
+            } else {
                 throw new AuthenticationException("Invalid Credentials!");
             }
         }
@@ -110,7 +87,7 @@ public class UserService {
 
     public SafeUserDTO getUser(int id) {
         Optional<User> user = userRepository.findById(id);
-        if(user.isEmpty()){
+        if (user.isEmpty()) {
             throw new UserDoesNotExistException("The user does not exist.");
         }
         return new SafeUserDTO(user.get());
@@ -124,14 +101,14 @@ public class UserService {
         List<User> users = userRepository.findAll();
         List<SafeUserDTO> safeUsers = new ArrayList<>();
 
-        for (User u: users) {
+        for (User u : users) {
             safeUsers.add(new SafeUserDTO(u));
         }
 
         return safeUsers;
     }
 
-    public String likeSection(int userId,int sectionId, HttpSession session) {
+    public String likeSection(int userId, int sectionId, HttpSession session) {
 
         Section s = sectionRepository.findById(sectionId).get();
         User u = userRepository.findById(userId).get();
@@ -148,12 +125,21 @@ public class UserService {
         return "You disliked section with id : " + sectionId;
     }
 
-    public String shareSection(int userId, int sectionId, HttpSession session) {
+    public String shareSection(int userId, int sectionId) {
         Section s = sectionRepository.findById(sectionId).get();
         User u = userRepository.findById(userId).get();
         s.getUsersSharedWith().add(u);
         sectionRepository.save(s);
         return "You shared section with id : " + sectionId + " with user with id " + userId;
+    }
+
+
+    public String unshareSection(int userId, int sectionId) {
+        Section s = sectionRepository.findById(sectionId).get();
+        User u = userRepository.findById(userId).get();
+        s.getUsersSharedWith().remove(u);
+        sectionRepository.save(s);
+        return "You unshared section with id : " + sectionId + " with user with id " + userId;
     }
 
     public String followUser(int userId, int fuserId, HttpSession session) {
@@ -166,33 +152,54 @@ public class UserService {
         return "You started following " + fu.getUsername();
     }
 
+    public List<SectionFromDbDTO> getPublicSectionFromFollowedUsers(int userId) {
+        return SectionDBDao.getPublicSectionsFollowedByMe(userId);
+    }
 
-//    public List<SafeUserDTO> followers(int id) {
-//        List<User> users = userRepository.findBy;
-//    }
-}
+    public List<SectionFromDbDTO> getMySections(int userId) {
+        return UserDAO.showAllMySection(userId);
+    }
 
+    public String unfollowUser(int userId, int fuserId) {
+        User u = userRepository.findById(userId).get();
+        User fu = userRepository.findById(fuserId).get();
 
-//Failed code
-/*
-        We use regex to avoid trim() and also because with .length it takes even the spaces
-        if(userPassword.length() < 6){
-            throw new NotSecuredEnoughInputException("The password must have at least 6 characters");
+        fu.getFollowers().remove(u);
+        userRepository.save(fu);
+
+        return "You unfollow " + fu.getUsername();
+    }
+
+    public String updateUser(User user, int myId) {
+
+        //verify all data
+        if (user == null) {
+            return "Invalid info!";
         }
-*/
-//        if(!userPassword.matches(".{6,}")){
-//            throw new NotSecuredEnoughInputException("The password must have at least 6 characters");
-//        }
-//        if(!userPassword.matches("(?=.*[0-9])")){
-//            throw new NotSecuredEnoughInputException("The password must contain at least 1 numeric character");
-//        }
-//        if(!userPassword.matches("(?=.*[a-z])")){
-//            throw new NotSecuredEnoughInputException("The password must contain at least 1 lowercase alphabetical character");
-//        }
-//        if(!userPassword.matches("(?=.*[A-Z])")){
-//            throw new NotSecuredEnoughInputException("The password must contain at least 1 uppercase\n" +
-//                    "alphabetical character");
-//        }
-//        if(!userPassword.matches("(?=.[!@#\\$%\\^&])")){
-//            throw new NotSecuredEnoughInputException("The password must contain at least one special character");
-//        }
+        if (userRepository.findByEmail(user.getEmail()) != null) {
+            throw new BadRequestException("Email already exists!");
+        }
+        if (userRepository.findByUsername(user.getUsername()) != null) {
+            throw new BadRequestException("Username already exists!");
+        }
+
+
+        User me = userRepository.findById(myId).get();
+        me.setFirstName(user.getFirstName());
+        me.setLastName(user.getLastName());
+        me.setEmail(user.getEmail());
+        me.setUsername(user.getUsername());
+
+        userRepository.save(me);
+
+        return "Successful updating";
+    }
+
+    public List<UserFromDbDTO> showMyFollowers(int userId) {
+        return UserDAO.showFollowers(userId);
+    }
+
+    public List<SectionFromDbDTO> showSharedSectionsWithMe(int userId) {
+        return SectionDBDao.getSharedWithMeSection(userId);
+    }
+}

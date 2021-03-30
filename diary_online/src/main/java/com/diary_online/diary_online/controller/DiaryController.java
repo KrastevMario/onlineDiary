@@ -27,7 +27,7 @@ public class DiaryController extends AbstractController{
     }
 
     @GetMapping("/users/diaries/{diary_id}")
-    public Diary getDiary(@RequestParam(value = "diary_id") int diaryId){
+    public Diary getDiary(@PathVariable(value = "diary_id") int diaryId){
         return diaryService.getDiary(diaryId);
     }
 }
