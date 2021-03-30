@@ -69,6 +69,9 @@ public class UserController extends AbstractController{
     @PutMapping("/users/dislike/{section_id}")
     public String dislikeSection(@PathVariable(name = "section_id") int sectionId, HttpSession session){
         //TODO: VERIFICATION
+        if(sessionController.isLoggedIn(session)){
+            return "You are not logged in. Please log in.";
+        }
         int userId = sessionController.getLoggedUser(session).getId();
         return userService.dislikeSection(userId,sectionId,session);
     }
@@ -76,15 +79,29 @@ public class UserController extends AbstractController{
     @PutMapping("/users/share/{section_id}")
     public String shareSection(@PathVariable(name = "section_id") int sectionId, HttpSession session){
         //TODO: Verification
+        if(sessionController.isLoggedIn(session)){
+            return "You are not logged in. Please log in.";
+        }
         int userId = sessionController.getLoggedUser(session).getId();
         return userService.shareSection(userId,sectionId,session);
     }
 
     @PutMapping("/users/follow/{fuser_id}")
     public String followUser(@PathVariable(name = "fuser_id") int fuserId, HttpSession session){
-        //TODO: Verify
+        if(!sessionController.isLoggedIn(session)){
+            return "You are not logged in. Please log in.";
+        }
         int userId = sessionController.getLoggedUser(session).getId();
-        return userService.followUser(userId,fuserId,session);
+        return userService.followUser(userId,fuserId);
+    }
+
+    @GetMapping("/users/logout")
+    public String logout(HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            return "You are not logged in yet. Cannot log out.";
+        }
+        sessionController.logoutUser(session);
+        return "Successfully logged out.";
     }
 
 //    @GetMapping("/users/follow")

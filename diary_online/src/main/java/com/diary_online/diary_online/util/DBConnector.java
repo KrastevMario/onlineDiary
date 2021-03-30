@@ -1,4 +1,4 @@
-package users;
+package com.diary_online.diary_online.util;
 
 import com.google.gson.Gson;
 
@@ -26,7 +26,8 @@ public class DBConnector {
         if(c != null) {
             try {
                 Class.forName("com.mysql.cj.jdbc.Driver");
-                connection = DriverManager.getConnection("jdbc:mysql://" + c.host + ":" + c.port + "/java_s12", c.username, c.password);
+                connection = DriverManager.getConnection("jdbc:mysql://" + c.host + ":" + c.port + "/"
+                        + c.database, c.username, c.password);
 
             } catch (ClassNotFoundException e) {
                 System.out.println("Unable to use MySQL. " + e.getMessage());
@@ -37,6 +38,7 @@ public class DBConnector {
     }
 
     private class DBCredentials{
+        public String database;
         private String host;
         private int port;
         private String username;
@@ -47,7 +49,8 @@ public class DBConnector {
     private void loadCredentials() {
         Gson gson = new Gson();
         try {
-            DBCredentials credentials = gson.fromJson(new FileReader("db_settings.json"), DBCredentials.class);
+            DBCredentials credentials = gson.fromJson(new FileReader("C:\\Users\\mario\\Desktop\\project\\test\\" +
+                    "onlineDiary\\onlineDiary\\diary_online\\src\\main\\resources\\db_settings.json"), DBCredentials.class);
             if(credentials == null){
                 System.out.println("Credentials missing in configuration file");
                 return;

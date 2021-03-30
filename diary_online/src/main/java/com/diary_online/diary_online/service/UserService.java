@@ -2,12 +2,11 @@ package com.diary_online.diary_online.service;
 
 import com.diary_online.diary_online.controller.SessionController;
 import com.diary_online.diary_online.exceptions.*;
+import com.diary_online.diary_online.model.dao.UserDAO;
 import com.diary_online.diary_online.model.dto.LoginUserDTO;
 import com.diary_online.diary_online.model.dto.SafeUserDTO;
-import com.diary_online.diary_online.model.pojo.Comment;
 import com.diary_online.diary_online.model.pojo.Section;
 import com.diary_online.diary_online.model.pojo.User;
-import com.diary_online.diary_online.repository.CommentRepository;
 import com.diary_online.diary_online.repository.SectionRepository;
 import com.diary_online.diary_online.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +32,8 @@ public class UserService {
     @Autowired
     SectionRepository sectionRepository;
 
+    UserDAO userDao = new UserDAO();
+
 
     public String addUser(User user) {
         //verify all data
@@ -47,39 +48,10 @@ public class UserService {
         }
         //verify the integrity of "password"
         String userPassword = user.getPassword();
-<<<<<<< HEAD
-        /*
-        We use regex to avoid trim() and also because with .length it takes even the spaces
-        if(userPassword.length() < 6){
-            throw new NotSecuredEnoughInputException("The password must have at least 6 characters");
-        }
-        */
-        /*
-        if(!userPassword.matches("(?=.{6,})")){
-            throw new NotSecuredEnoughInputException("The password must have at least 6 characters");
-        }
-        if(!userPassword.matches("(?=.*[a-z])")){
-            throw new NotSecuredEnoughInputException("The password must contain at least 1 lowercase alphabetical character");
-        }
-        if(!userPassword.matches("(?=.*[A-Z])")){
-            throw new NotSecuredEnoughInputException("The password must contain at least 1 uppercase\n" +
-                    "alphabetical character");
-        }
-        if(!userPassword.matches("(?=.*[0-9])")){
-            throw new NotSecuredEnoughInputException("The password must contain at least 1 numeric character");
-        }
-        if(!userPassword.matches("(?=.[!@#\\$%\\^&])")){
-            throw new NotSecuredEnoughInputException("The password must contain at least one special character");
-        }
-         */
-=======
-
         if(!userPassword.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{6,}$")){
             throw new NotSecuredEnoughInputException("The password must have at least 6 characters, 1 numeric character," +
                     " 1 lowercase alphabetical character, 1 uppercase alphabetical character");
         }
-
->>>>>>> 503bed51f06350a350b96db59478705cefc9292f
         //hash password
         PasswordEncoder encoder = new BCryptPasswordEncoder();
         String pwdHashed = encoder.encode(userPassword);
@@ -156,14 +128,27 @@ public class UserService {
         return "You shared section with id : " + sectionId + " with user with id " + userId;
     }
 
-    public String followUser(int userId, int fuserId, HttpSession session) {
-        User u = userRepository.findById(userId).get();
-        User fu = userRepository.findById(fuserId).get();
+    public String followUser(int userId, int userToFollowId) {
+        //check if the user exists
+        if(userRepository.findById(userId).isEmpty()){
+            return "Something went wrong while trying to execute your request.";
+        }
+        //check if the follower exists
+        if(userRepository.findById(userToFollowId).isEmpty()){
+            return "You are trying to follow an invalid user.";
+        }
+        //check if the user is already following the followedUser
+        if(userDao.isAlreadyFollowing(userId, userToFollowId)){
+            return "You are already following this user. Cannot follow twice the same user.";
+        }
 
-        fu.getFollowers().add(u);
-        userRepository.save(fu);
+        User user = userRepository.findById(userId).get();
+        User userToFollow = userRepository.findById(userToFollowId).get();
 
-        return "You started following " + fu.getUsername();
+        userToFollow.getFollowers().add(user);
+        userRepository.save(userToFollow);
+
+        return "You started following " + userToFollow.getUsername();
     }
 
 
