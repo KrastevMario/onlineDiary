@@ -2,16 +2,14 @@ package com.diary_online.diary_online.service;
 
 import com.diary_online.diary_online.controller.SessionController;
 import com.diary_online.diary_online.exceptions.*;
-import com.diary_online.diary_online.model.dao.SectionDBDao;
+import com.diary_online.diary_online.model.dao.SectionDbDAO;
 import com.diary_online.diary_online.model.dao.UserDAO;
 import com.diary_online.diary_online.model.dto.LoginUserDTO;
 import com.diary_online.diary_online.model.dto.SafeUserDTO;
 import com.diary_online.diary_online.model.dto.SectionFromDbDTO;
 import com.diary_online.diary_online.model.dto.UserFromDbDTO;
-import com.diary_online.diary_online.model.pojo.Comment;
 import com.diary_online.diary_online.model.pojo.Section;
 import com.diary_online.diary_online.model.pojo.User;
-import com.diary_online.diary_online.repository.CommentRepository;
 import com.diary_online.diary_online.repository.SectionRepository;
 import com.diary_online.diary_online.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -108,7 +106,7 @@ public class UserService {
         return safeUsers;
     }
 
-    public String likeSection(int userId, int sectionId, HttpSession session) {
+    public String likeSection(int userId, int sectionId) {
 
         Section s = sectionRepository.findById(sectionId).get();
         User u = userRepository.findById(userId).get();
@@ -117,7 +115,7 @@ public class UserService {
         return "You liked section with id : " + sectionId;
     }
 
-    public String dislikeSection(int userId, int sectionId, HttpSession session) {
+    public String dislikeSection(int userId, int sectionId) {
         Section s = sectionRepository.findById(sectionId).get();
         User u = userRepository.findById(userId).get();
         s.getDisLikers().add(u);
@@ -153,7 +151,7 @@ public class UserService {
     }
 
     public List<SectionFromDbDTO> getPublicSectionFromFollowedUsers(int userId) {
-        return SectionDBDao.getPublicSectionsFollowedByMe(userId);
+        return SectionDbDAO.getPublicSectionsFollowedByMe(userId);
     }
 
     public List<SectionFromDbDTO> getMySections(int userId) {
@@ -200,6 +198,6 @@ public class UserService {
     }
 
     public List<SectionFromDbDTO> showSharedSectionsWithMe(int userId) {
-        return SectionDBDao.getSharedWithMeSection(userId);
+        return SectionDbDAO.getSharedWithMeSection(userId);
     }
 }

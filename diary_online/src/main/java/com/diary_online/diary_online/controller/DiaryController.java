@@ -30,4 +30,23 @@ public class DiaryController extends AbstractController{
     public Diary getDiary(@PathVariable(value = "diary_id") int diaryId){
         return diaryService.getDiary(diaryId);
     }
+
+    @PostMapping("/users/diaries/{diary_id}")
+    public String updateDiary(@PathVariable(value = "diary_id") int diaryId,@RequestBody Diary diary,HttpSession session){
+        if(sessionController.isLoggedIn(session)){
+            int myId = sessionController.getLoggedUser(session).getId();
+            return diaryService.updateDiary(diaryId,diary);
+        }
+        else{
+            return "You are not logged in";
+        }
+
+    }
+
+    @DeleteMapping("/diary/{diary_id}")
+    public String deleteDiary(@PathVariable(value = "diary_id") int diaryId,HttpSession session){
+        int userId = sessionController.getLoggedUser(session).getId();
+        return diaryService.deleteDiary(userId,diaryId);
+    }
+
 }

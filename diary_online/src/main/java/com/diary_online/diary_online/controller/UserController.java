@@ -61,7 +61,7 @@ public class UserController extends AbstractController{
     public String likeSection(@PathVariable(name = "section_id") int sectionId, HttpSession session){
         //TODO: VERIFICATION
         int userId = sessionController.getLoggedUser(session).getId();
-        return userService.likeSection(userId,sectionId,session);
+        return userService.likeSection(userId,sectionId);
     }
 
 
@@ -69,7 +69,7 @@ public class UserController extends AbstractController{
     public String dislikeSection(@PathVariable(name = "section_id") int sectionId, HttpSession session){
         //TODO: VERIFICATION
         int userId = sessionController.getLoggedUser(session).getId();
-        return userService.dislikeSection(userId,sectionId,session);
+        return userService.dislikeSection(userId,sectionId);
     }
 
     @PutMapping("/share/{section_id}/user/{user_id}")

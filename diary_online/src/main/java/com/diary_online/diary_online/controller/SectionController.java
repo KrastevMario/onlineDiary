@@ -21,8 +21,7 @@ public class SectionController {
         int userId = sessionController.getLoggedUser(ses).getId();
         return sectionService.addSection(userId,diaryId,section,ses);
     }
-
-
+    
     @PostMapping("/section/{section_id}")
     public String updateSection(@PathVariable(name = "section_id") int sectionId,@RequestBody Section section){
        return sectionService.updateSection(sectionId,section);
