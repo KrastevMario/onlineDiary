@@ -28,8 +28,7 @@ public class SectionDbDAO {
                 "join users as u on u.id = d.user_id\n" +
                 "join users_have_followers as uhf on uhf.user_id = u.id\n" +
                 "where s.privacy = \"public\" and uhf.following_user_id = ?";
-        try {
-            PreparedStatement ps = c.prepareStatement(sql);
+        try(PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, userId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()){
@@ -57,8 +56,7 @@ public class SectionDbDAO {
                 "join shared_sections as ss on ss.section_id = s.id\n" +
                 "join users as u on u.id = ss.user_id\n" +
                 "where u.id = ?\n";
-        try {
-            PreparedStatement ps = c.prepareStatement(sql);
+        try(PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, userId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()){

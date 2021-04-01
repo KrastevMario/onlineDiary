@@ -1,6 +1,8 @@
 package com.diary_online.diary_online.controller;
 
 
+import com.diary_online.diary_online.exceptions.AuthenticationException;
+import com.diary_online.diary_online.exceptions.BadRequestException;
 import com.diary_online.diary_online.model.dto.LoginUserDTO;
 import com.diary_online.diary_online.model.dto.SafeUserDTO;
 import com.diary_online.diary_online.model.dto.SectionFromDbDTO;
@@ -57,77 +59,56 @@ public class UserController extends AbstractController{
         return userService.getAllUsers();
     }
 
-    @PutMapping("/users/like/{section_id}")
-    public String likeSection(@PathVariable(name = "section_id") int sectionId, HttpSession session){
-        //TODO: VERIFICATION
-        int userId = sessionController.getLoggedUser(session).getId();
-        return userService.likeSection(userId,sectionId);
-    }
 
-
-    @PutMapping("/users/dislike/{section_id}")
-    public String dislikeSection(@PathVariable(name = "section_id") int sectionId, HttpSession session){
-        //TODO: VERIFICATION
-        int userId = sessionController.getLoggedUser(session).getId();
-        return userService.dislikeSection(userId,sectionId);
-    }
-
-    @PutMapping("/share/{section_id}/user/{user_id}")
-    public String shareSection(@PathVariable(name = "section_id") int sectionId, @PathVariable(name = "user_id") int userId,HttpSession session){
-        //TODO: Verification
-        if(sessionController.isLoggedIn(session)){
-            return userService.shareSection(userId,sectionId);
-        }
-        else{
-            return "You are not logged in";
-        }
-
-    }
-
-    @DeleteMapping("/unshare/{section_id}/user/{user_id}")
-    public String unshareSection(@PathVariable(name = "section_id") int sectionId, @PathVariable(name = "user_id") int userId,HttpSession session){
-        //TODO: Verification
-        if(sessionController.isLoggedIn(session)){
-            return userService.unshareSection(userId,sectionId);
-        }
-        else{
-            return "You are not logged in";
-        }
-
-    }
 
     @PutMapping("/users/follow/{fuser_id}")
     public String followUser(@PathVariable(name = "fuser_id") int fuserId, HttpSession session){
-        //TODO: Verify
+        if(!sessionController.isLoggedIn(session)){
+            return "You are not logged in. Please log in.";
+        }
         int userId = sessionController.getLoggedUser(session).getId();
-        return userService.followUser(userId,fuserId,session);
+        return userService.followUser(userId,fuserId);
+    }
+
+    @GetMapping("/users/logout")
+    public String logout(HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            return "You are not logged in yet. Cannot log out.";
+        }
+        sessionController.logoutUser(session);
+        return "Successfully logged out.";
     }
 
     @GetMapping("/followedUsers/public/section")
-    public List<SectionFromDbDTO> getPublicSectionFromFollowedUsers( HttpSession session){
-
+    public List<SectionFromDbDTO> getPublicSectionFromFollowedUsers(HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to use this option.");
+        }
         int userId = sessionController.getLoggedUser(session).getId();
         return userService.getPublicSectionFromFollowedUsers(userId);
     }
 
-    @GetMapping("/user/sections")
+    @GetMapping("/users/sections")
     public List<SectionFromDbDTO> getMySection(HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to use this option.");
+        }
         int userId = sessionController.getLoggedUser(session).getId();
         return userService.getMySections(userId);
     }
 
-    @DeleteMapping("/users/unfollow/{fuser_id}")
-    public String unfollowUser(@PathVariable(name = "fuser_id") int fuserId, HttpSession session){
-        //TODO: Verify
+    @DeleteMapping("/users/unfollow/{userToUnfollow}")
+    public String unfollowUser(@PathVariable(name = "userToUnfollow") int userToUnfollow, HttpSession session){
         int userId = sessionController.getLoggedUser(session).getId();
-        return userService.unfollowUser(userId,fuserId);
+        return userService.unfollowUser(userId,userToUnfollow);
     }
 
     @PostMapping("/users/edit")
-    public String updateUser(@RequestBody User user, HttpSession session){
+    public String updateUser(@RequestBody User userNewInfo, HttpSession session){
+        //TODO: Verify
         if(sessionController.isLoggedIn(session)){
             int myId = sessionController.getLoggedUser(session).getId();
-            return userService.updateUser(user,myId);
+            return userService.updateUser(userNewInfo,myId);
         }
         else{
             return "You are not logged in";
@@ -137,12 +118,18 @@ public class UserController extends AbstractController{
 
     @GetMapping("/users/followers")
     public List<UserFromDbDTO> myFollowers(HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to use this option.");
+        }
         int userId = sessionController.getLoggedUser(session).getId();
         return userService.showMyFollowers(userId);
     }
 
-    @GetMapping("/user/shared/sections")
+    @GetMapping("/users/shared/sections")
     public List<SectionFromDbDTO> getSharedSectionsWitMe(HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to use this option.");
+        }
         int userId = sessionController.getLoggedUser(session).getId();
         return userService.showSharedSectionsWithMe(userId);
     }

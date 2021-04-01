@@ -33,7 +33,11 @@ public class CommentService {
 
     public String addComment( Comment comment,int userId, int sectionId) {
 
-        Section section = sectionRepository.findById(sectionId).get();
+       Optional<Section> sec = sectionRepository.findById(sectionId);
+       if(!sec.isPresent()){
+           return "Cannot found section";
+       }
+       Section section = sec.get();
         User user = userRepository.findById(userId).get();
 
         List<SectionFromDbDTO> accessibleSection = new ArrayList<>();

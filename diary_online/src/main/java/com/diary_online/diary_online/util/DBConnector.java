@@ -1,5 +1,4 @@
 package com.diary_online.diary_online.util;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -7,7 +6,7 @@ import java.sql.SQLException;
 public class DBConnector {
     private static DBConnector instance;
     private Connection connection;
-    private DBConnector(){
+        private DBConnector(){
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
         } catch (ClassNotFoundException e) {

@@ -8,10 +8,10 @@ import com.diary_online.diary_online.model.dto.LoginUserDTO;
 import com.diary_online.diary_online.model.dto.SafeUserDTO;
 import com.diary_online.diary_online.model.dto.SectionFromDbDTO;
 import com.diary_online.diary_online.model.dto.UserFromDbDTO;
-import com.diary_online.diary_online.model.pojo.Section;
 import com.diary_online.diary_online.model.pojo.User;
 import com.diary_online.diary_online.repository.SectionRepository;
 import com.diary_online.diary_online.repository.UserRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -38,25 +38,38 @@ public class UserService {
 
     public String addUser(User user) {
         //verify all data
+        //check if all the info is different than Null
         if (user == null) {
             return "Invalid info!";
         }
-        if (userRepository.findByEmail(user.getEmail()) != null) {
+        if(user.getEmail() == null || user.getEmail().isBlank()){
+            return "Please insert an email. Registration failed.";
+        }
+        if(user.getUsername() == null || user.getUsername().isBlank()){
+            return "Please insert a username. Registration failed.";
+        }
+        if(user.getFirstName() == null || user.getFirstName().isBlank()){
+            return "Please insert your first name. Registration failed.";
+        }
+        if(user.getLastName() == null || user.getLastName().isBlank()){
+            return "Please insert your last name. Registration failed.";
+        }
+        if(user.getPassword() == null || user.getPassword().isBlank()){
+            return "Please insert a password. Registration failed.";
+        }
+
+        if (userRepository.existsByEmail(user.getEmail())) {
             throw new BadRequestException("Email already exists!");
         }
-        if (userRepository.findByUsername(user.getUsername()) != null) {
+        if (userRepository.existsByUsername(user.getUsername())) {
             throw new BadRequestException("Username already exists!");
         }
         //verify the integrity of "password"
         String userPassword = user.getPassword();
-
-
-        if (!userPassword.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{6,}$")) {
+        if(!userPassword.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{6,}$")){
             throw new NotSecuredEnoughInputException("The password must have at least 6 characters, 1 numeric character," +
                     " 1 lowercase alphabetical character, 1 uppercase alphabetical character");
         }
-
-
         //hash password
         PasswordEncoder encoder = new BCryptPasswordEncoder();
         String pwdHashed = encoder.encode(userPassword);
@@ -106,98 +119,115 @@ public class UserService {
         return safeUsers;
     }
 
-    public String likeSection(int userId, int sectionId) {
 
-        Section s = sectionRepository.findById(sectionId).get();
-        User u = userRepository.findById(userId).get();
-        s.getLikers().add(u);
-        sectionRepository.save(s);
-        return "You liked section with id : " + sectionId;
-    }
+    public String followUser(int userId, int userToFollowId) {
+        //check if the user exists
+        if (userRepository.findById(userId).isEmpty()) {
+            return "Something went wrong while trying to execute your request.";
+        }
+        //check if the follower exists
+        if (userRepository.findById(userToFollowId).isEmpty()) {
+            return "You are trying to follow an invalid user.";
+        }
+        //check if the user is already following the followedUser
+        if (UserDAO.isAlreadyFollowing(userId, userToFollowId)) {
+            return "You are already following this user. Cannot follow twice the same user.";
+        }
 
-    public String dislikeSection(int userId, int sectionId) {
-        Section s = sectionRepository.findById(sectionId).get();
-        User u = userRepository.findById(userId).get();
-        s.getDisLikers().add(u);
-        sectionRepository.save(s);
-        return "You disliked section with id : " + sectionId;
-    }
+        User user = userRepository.findById(userId).get();
+        User userToFollow = userRepository.findById(userToFollowId).get();
+        userToFollow.getFollowers().add(user);
+        userRepository.save(userToFollow);
 
-    public String shareSection(int userId, int sectionId) {
-        Section s = sectionRepository.findById(sectionId).get();
-        User u = userRepository.findById(userId).get();
-        s.getUsersSharedWith().add(u);
-        sectionRepository.save(s);
-        return "You shared section with id : " + sectionId + " with user with id " + userId;
-    }
-
-
-    public String unshareSection(int userId, int sectionId) {
-        Section s = sectionRepository.findById(sectionId).get();
-        User u = userRepository.findById(userId).get();
-        s.getUsersSharedWith().remove(u);
-        sectionRepository.save(s);
-        return "You unshared section with id : " + sectionId + " with user with id " + userId;
-    }
-
-    public String followUser(int userId, int fuserId, HttpSession session) {
-        User u = userRepository.findById(userId).get();
-        User fu = userRepository.findById(fuserId).get();
-
-        fu.getFollowers().add(u);
-        userRepository.save(fu);
-
-        return "You started following " + fu.getUsername();
+        return "You started following " + userToFollow.getUsername();
     }
 
     public List<SectionFromDbDTO> getPublicSectionFromFollowedUsers(int userId) {
+        if(userRepository.findById(userId).isEmpty()){
+            throw new BadRequestException("There was a problem reading the user's Id.");
+        }
         return SectionDbDAO.getPublicSectionsFollowedByMe(userId);
     }
 
     public List<SectionFromDbDTO> getMySections(int userId) {
+        if(userRepository.findById(userId).isEmpty()){
+            throw new BadRequestException("The user is invalid.");
+        }
         return UserDAO.showAllMySection(userId);
     }
 
-    public String unfollowUser(int userId, int fuserId) {
-        User u = userRepository.findById(userId).get();
-        User fu = userRepository.findById(fuserId).get();
+    public String unfollowUser(int userId, int userToUnfollowId) {
+        if(userRepository.findById(userId).isEmpty()){
+            throw new AuthenticationException("There's a problem in reading your authentication. Please try to relog to fix the issue.");
+        }
+        if(userRepository.findById(userToUnfollowId).isEmpty()){
+            throw new BadRequestException("The user you are trying to unfollow is invalid.");
+        }
 
-        fu.getFollowers().remove(u);
-        userRepository.save(fu);
+        User user = userRepository.findById(userId).get();
+        User unfollowUser = userRepository.findById(userToUnfollowId).get();
+        //check if the user is following the other user (userToUnfollow)
+        if(!UserDAO.isAlreadyFollowing(userId, userToUnfollowId)){
+            throw new BadRequestException("Cannot unfollow the user. You are not following " + unfollowUser.getUsername());
+        }
+        unfollowUser.getFollowers().remove(user);
+        userRepository.save(unfollowUser);
 
-        return "You unfollow " + fu.getUsername();
+        return "You unfollowed " + unfollowUser.getUsername();
     }
 
-    public String updateUser(User user, int myId) {
-
-        //verify all data
-        if (user == null) {
+    public String updateUser(User userNewInfo, int myId) {
+        if (userNewInfo == null) { //the ifs can be merged but it is easier to understand like this
             return "Invalid info!";
         }
-        if (userRepository.findByEmail(user.getEmail()) != null) {
-            throw new BadRequestException("Email already exists!");
+        //check every info that the user has (that can be modified)
+        boolean isUsernameValid = !(userNewInfo.getUsername() == null || userNewInfo.getUsername().isBlank());
+        boolean isFirstNameValid = !(userNewInfo.getFirstName() == null || userNewInfo.getFirstName().isBlank());
+        boolean isLastNameValid = !(userNewInfo.getLastName() == null || userNewInfo.getLastName().isBlank());
+        boolean isEmailValid = !(userNewInfo.getEmail() == null || userNewInfo.getEmail().isBlank());
+        if (!isUsernameValid && !isFirstNameValid && !isLastNameValid && !isEmailValid){
+            throw new BadRequestException("The data cannot be blank.");
         }
-        if (userRepository.findByUsername(user.getUsername()) != null) {
-            throw new BadRequestException("Username already exists!");
+
+        //set the data after a verification of the input
+        User meUser = userRepository.findById(myId).get(); //contains the new info
+
+        if(isEmailValid) {
+            if (userRepository.existsByEmail(userNewInfo.getEmail())) {
+                throw new BadRequestException("Email already exists!");
+            }
+            meUser.setEmail(userNewInfo.getEmail());
         }
-
-
-        User me = userRepository.findById(myId).get();
-        me.setFirstName(user.getFirstName());
-        me.setLastName(user.getLastName());
-        me.setEmail(user.getEmail());
-        me.setUsername(user.getUsername());
-
-        userRepository.save(me);
-
-        return "Successful updating";
+        if(isFirstNameValid){
+            meUser.setFirstName(userNewInfo.getFirstName());
+        }
+        if(isLastNameValid){
+            meUser.setLastName(userNewInfo.getLastName());
+        }
+        if(isUsernameValid) {
+            if (userRepository.existsByUsername(userNewInfo.getUsername())) {
+                throw new BadRequestException("Username already exists!");
+            }
+            meUser.setUsername(userNewInfo.getUsername());
+        }
+        //save the new info
+        userRepository.save(meUser);
+        User userUpdated = userRepository.findById(meUser.getId()).get();
+        return "Successfully updated. New info: \n" + userUpdated.getUsername() + "\n" + userUpdated.getFirstName() + "\n"
+                + userUpdated.getLastName() + "\n" + userUpdated.getEmail();
     }
 
     public List<UserFromDbDTO> showMyFollowers(int userId) {
+        if(userRepository.findById(userId).isEmpty()){
+            throw new BadRequestException("The user is invalid.");
+        }
         return UserDAO.showFollowers(userId);
     }
 
     public List<SectionFromDbDTO> showSharedSectionsWithMe(int userId) {
+        if(userRepository.findById(userId).isEmpty()){
+            throw new BadRequestException("The user is invalid.");
+        }
         return SectionDbDAO.getSharedWithMeSection(userId);
     }
 }

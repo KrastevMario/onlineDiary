@@ -25,6 +25,10 @@ public class Section {
     private LocalDateTime createdAt;
     private String privacy;
 
+    public enum PrivacyOptions{
+        PUBLIC,
+        PRIVATE
+    }
     @ManyToOne
     @JoinColumn(name="diary_id")
     @JsonBackReference("section-diary")
