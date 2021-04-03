@@ -113,7 +113,6 @@ public class UserController extends AbstractController{
         else{
             return "You are not logged in";
         }
-
     }
 
     @GetMapping("/users/followers")

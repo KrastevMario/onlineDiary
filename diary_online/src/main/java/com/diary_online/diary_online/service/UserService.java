@@ -34,6 +34,10 @@ public class UserService {
     SessionController sessionController;
     @Autowired
     SectionRepository sectionRepository;
+    @Autowired
+    SectionDbDAO sectionDbDAO;
+    @Autowired
+    UserDAO userDAO;
 
 
     public String addUser(User user) {
@@ -67,7 +71,7 @@ public class UserService {
         //verify the integrity of "password"
         String userPassword = user.getPassword();
         if(!userPassword.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{6,}$")){
-            throw new NotSecuredEnoughInputException("The password must have at least 6 characters, 1 numeric character," +
+            throw new BadRequestException("The password must have at least 6 characters, 1 numeric character," +
                     " 1 lowercase alphabetical character, 1 uppercase alphabetical character");
         }
         //hash password
@@ -99,7 +103,7 @@ public class UserService {
     public SafeUserDTO getUser(int id) {
         Optional<User> user = userRepository.findById(id);
         if (user.isEmpty()) {
-            throw new UserDoesNotExistException("The user does not exist.");
+            throw new NotFoundException("The user does not exist.");
         }
         return new SafeUserDTO(user.get());
     }
@@ -119,7 +123,6 @@ public class UserService {
         return safeUsers;
     }
 
-
     public String followUser(int userId, int userToFollowId) {
         //check if the user exists
         if (userRepository.findById(userId).isEmpty()) {
@@ -130,7 +133,7 @@ public class UserService {
             return "You are trying to follow an invalid user.";
         }
         //check if the user is already following the followedUser
-        if (UserDAO.isAlreadyFollowing(userId, userToFollowId)) {
+        if (userDAO.isAlreadyFollowing(userId, userToFollowId)) {
             return "You are already following this user. Cannot follow twice the same user.";
         }
 
@@ -146,14 +149,14 @@ public class UserService {
         if(userRepository.findById(userId).isEmpty()){
             throw new BadRequestException("There was a problem reading the user's Id.");
         }
-        return SectionDbDAO.getPublicSectionsFollowedByMe(userId);
+        return sectionDbDAO.getPublicSectionsFollowedByMe(userId);
     }
 
     public List<SectionFromDbDTO> getMySections(int userId) {
         if(userRepository.findById(userId).isEmpty()){
             throw new BadRequestException("The user is invalid.");
         }
-        return UserDAO.showAllMySection(userId);
+        return userDAO.showAllMySection(userId);
     }
 
     public String unfollowUser(int userId, int userToUnfollowId) {
@@ -167,7 +170,7 @@ public class UserService {
         User user = userRepository.findById(userId).get();
         User unfollowUser = userRepository.findById(userToUnfollowId).get();
         //check if the user is following the other user (userToUnfollow)
-        if(!UserDAO.isAlreadyFollowing(userId, userToUnfollowId)){
+        if(!userDAO.isAlreadyFollowing(userId, userToUnfollowId)){
             throw new BadRequestException("Cannot unfollow the user. You are not following " + unfollowUser.getUsername());
         }
         unfollowUser.getFollowers().remove(user);
@@ -221,13 +224,13 @@ public class UserService {
         if(userRepository.findById(userId).isEmpty()){
             throw new BadRequestException("The user is invalid.");
         }
-        return UserDAO.showFollowers(userId);
+        return userDAO.showFollowers(userId);
     }
 
     public List<SectionFromDbDTO> showSharedSectionsWithMe(int userId) {
         if(userRepository.findById(userId).isEmpty()){
             throw new BadRequestException("The user is invalid.");
         }
-        return SectionDbDAO.getSharedWithMeSection(userId);
+        return sectionDbDAO.getSharedWithMeSection(userId);
     }
 }

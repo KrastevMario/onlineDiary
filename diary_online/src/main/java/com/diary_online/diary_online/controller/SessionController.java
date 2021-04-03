@@ -1,9 +1,8 @@
 package com.diary_online.diary_online.controller;
 
 import com.diary_online.diary_online.exceptions.AuthenticationException;
-import com.diary_online.diary_online.exceptions.InvalidIDException;
+import com.diary_online.diary_online.exceptions.BadRequestException;
 import com.diary_online.diary_online.model.dto.SafeUserDTO;
-import com.diary_online.diary_online.model.pojo.User;
 import com.diary_online.diary_online.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -33,7 +32,7 @@ public class SessionController extends AbstractController{
             ses.setAttribute(LOGGED_USER_ID, id);
             return;
         }
-        throw new InvalidIDException("Invalid user id");
+        throw new BadRequestException("Invalid user id");
     }
 
     public void logoutUser(HttpSession ses) {

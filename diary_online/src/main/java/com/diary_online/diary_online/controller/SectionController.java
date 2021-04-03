@@ -1,5 +1,7 @@
 package com.diary_online.diary_online.controller;
 
+import com.diary_online.diary_online.exceptions.AuthenticationException;
+import com.diary_online.diary_online.model.dto.SuccessDTO;
 import com.diary_online.diary_online.model.pojo.Diary;
 import com.diary_online.diary_online.model.pojo.Section;
 import com.diary_online.diary_online.service.SectionService;
@@ -10,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpSession;
 
 @RestController
-public class SectionController {
+public class SectionController extends AbstractController{
     @Autowired
     SectionService sectionService;
     @Autowired
@@ -18,58 +20,85 @@ public class SectionController {
     @Autowired
     UserService userService;
 
-    @PutMapping("/users/diaries/{diary_id}/addSection")
-    public String addSection(@PathVariable(name = "diary_id") int diaryId,@RequestBody Section section, HttpSession ses){
-        //TODO: VERIFY
-        int userId = sessionController.getLoggedUser(ses).getId();
-        return sectionService.addSection(userId,diaryId,section,ses);
-    }
-
-
-    @PutMapping("/users/likes/{section_id}")
-    public String likeSection(@PathVariable(name = "section_id") int sectionId, HttpSession session){
-        //TODO: VERIFICATION
+    @PutMapping("/sections/diaries/{diary_id}")
+    public SuccessDTO addSection(@PathVariable(name = "diary_id") int diaryId, @RequestBody Section section, HttpSession session){
         if(!sessionController.isLoggedIn(session)){
-            return "You are not logged in. You must login to be able to like a section.";
+            throw new AuthenticationException("You must be logged in to use this option.");
         }
         int userId = sessionController.getLoggedUser(session).getId();
-        return sectionService.likeSection(userId,sectionId);
+        return new SuccessDTO(sectionService.addSection(userId,diaryId,section));
+    }
+
+    @DeleteMapping("/sections/{section_id}")
+    public SuccessDTO deleteSection(@PathVariable(name = "section_id") int sectionId, HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to use this option.");
+        }
+        int userId = sessionController.getLoggedUser(session).getId();
+        return new SuccessDTO(sectionService.deleteSection(userId,sectionId));
     }
 
     @PostMapping("/sections/{section_id}")
-    public String updateSection(@PathVariable(name = "section_id") int sectionId,@RequestBody Section section){
-       return sectionService.updateSection(sectionId,section);
-    }
-
-    @PutMapping("/users/dislikes/{section_id}")
-    public String dislikeSection(@PathVariable(name = "section_id") int sectionId, HttpSession session){
-        //TODO: VERIFICATION
-        if(sessionController.isLoggedIn(session)){
-            return "You are not logged in. Please log in.";
+    public SuccessDTO updateSection(@PathVariable(name = "section_id") int sectionId,@RequestBody Section section,HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to use this option.");
         }
         int userId = sessionController.getLoggedUser(session).getId();
-        return sectionService.dislikeSection(userId,sectionId,session);
+        return new SuccessDTO(sectionService.updateSection(sectionId,section,userId));
     }
 
-    @PutMapping("/shares/{section_id}/users/{user_id}")
-    public String shareSection(@PathVariable(name = "section_id") int sectionId, @PathVariable(name = "user_id") int userId,HttpSession session){
-        //TODO: Verification
-        if(sessionController.isLoggedIn(session)){
-            return sectionService.shareSection(userId,sectionId);
+    @PutMapping("/users/likes/{section_id}")
+    public SuccessDTO likeSection(@PathVariable(name = "section_id") int sectionId, HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to use this option.");
         }
-        else{
-            return "You are not logged in. Please log in.";
-        }
+        int userId = sessionController.getLoggedUser(session).getId();
+        return new SuccessDTO(sectionService.likeSection(userId,sectionId));
     }
 
-    @DeleteMapping("/unshares/{section_id}/users/{user_id}")
-    public String unshareSection(@PathVariable(name = "section_id") int sectionId, @PathVariable(name = "user_id") int userId,HttpSession session){
-        //TODO: Verification
-        if(sessionController.isLoggedIn(session)){
-            return sectionService.unshareSection(userId,sectionId);
+
+    @PutMapping("/users/dislikes/{section_id}")
+    public SuccessDTO disLikeSection(@PathVariable(name = "section_id") int sectionId, HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to use this option.");
         }
-        else{
-            return "You are not logged in";
+        int userId = sessionController.getLoggedUser(session).getId();
+        return new SuccessDTO(sectionService.dislikeSection(userId,sectionId));
+    }
+
+    @PutMapping("/sections/{section_id}/users/{user_id}")
+    public SuccessDTO shareSection(@PathVariable(name = "section_id") int sectionId, @PathVariable(name = "user_id") int userId,HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to use this option.");
         }
+        int myId = sessionController.getLoggedUser(session).getId();
+        return new SuccessDTO(sectionService.shareSection(myId,userId,sectionId));
+    }
+
+    @DeleteMapping("/sections/{section_id}/users/{user_id}")
+    public SuccessDTO unshareSection(@PathVariable(name = "section_id") int sectionId, @PathVariable(name = "user_id") int userId,HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to use this option.");
+        }
+        int myId = sessionController.getLoggedUser(session).getId();
+        return new SuccessDTO(sectionService.unshareSection(myId,userId,sectionId));
+    }
+
+    @DeleteMapping("likes/sections/{section_id}")
+    public SuccessDTO deleteLike(@PathVariable(name = "section_id") int sectionId,HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to use this option.");
+        }
+        int userId = sessionController.getLoggedUser(session).getId();
+        return new SuccessDTO(sectionService.removeLike(userId,sectionId));
+    }
+
+    @DeleteMapping("dislikes/sections/{section_id}")
+    public SuccessDTO deleteDislike(@PathVariable(name = "section_id") int sectionId,HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to use this option.");
+        }
+        int userId = sessionController.getLoggedUser(session).getId();
+        return new SuccessDTO(sectionService.removeDislike(userId,sectionId));
     }
 }

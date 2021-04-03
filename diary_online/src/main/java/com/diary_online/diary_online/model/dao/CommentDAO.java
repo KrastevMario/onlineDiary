@@ -1,9 +1,6 @@
 package com.diary_online.diary_online.model.dao;
 
-import com.diary_online.diary_online.model.dto.UserFromDbDTO;
-import com.diary_online.diary_online.model.pojo.Comment;
 import com.diary_online.diary_online.repository.CommentRepository;
-import com.diary_online.diary_online.util.DBConnector;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -11,12 +8,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 
 @Component
 public class CommentDAO {
-
+/*
     @Autowired
     CommentRepository commentRepository;
     public static int findCommentByUserAndSectionId(int userId,int sectionId){
@@ -41,5 +36,7 @@ public class CommentDAO {
 
         return comentId;
     }
+
+ */
 
 }

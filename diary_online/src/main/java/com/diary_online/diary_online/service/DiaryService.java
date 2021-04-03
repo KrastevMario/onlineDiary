@@ -26,57 +26,51 @@ public class DiaryService {
     SessionController sessionController;
     @Autowired
     UserRepository userRepository;
+    @Autowired
+    SectionDbDAO sectionDbDAO;
 
-    public String addDiary(int userId, Diary diary, HttpSession ses){
+    public String addDiary(int userId, Diary diary){
 
-        Optional<User> user = userRepository.findById(userId);
-
-        if(user.isEmpty()){
-            throw new NotFoundException("User not found");
-        }
-
-        SafeUserDTO loggedUser = sessionController.getLoggedUser(ses);
-        if(loggedUser.getId() != userId){
-            throw new BadRequestException("You cannot make diary from another user profile, please login in yours");
-        }
-
-        User owner = user.get();
+        User owner = userRepository.findById(userId).get();
         diary.setOwner(owner);
         diary.setCreatedAt(LocalDateTime.now());
         diaryRepository.save(diary);
-        return "You successfully added the diary " + diary.getTitle();
+        return "You successfully added diary " + diary.getTitle();
     }
 
-    public Diary getDiary(int diaryId) {
-        //TODO: VERIFY if diary exists
-        return diaryRepository.findById(diaryId).get();
-    }
+    public String updateDiary(int userId, int diaryId, Diary diary) {
+        Optional<Diary> d = diaryRepository.findById(diaryId);
+        if(!d.isPresent()){
+            throw new NotFoundException("diary not found");
+        }
+        User user = userRepository.findById(userId).get();
 
-
-    public String updateDiary(int diaryId, Diary diary) {
-        Diary d = diaryRepository.findById(diaryId).get();
-        d.setTitle(diary.getTitle());
-        diaryRepository.save(d);
-
-        return "updated diary successful";
+        for (Diary userDiary:user.getDiaries()) {
+            if(userDiary.getId() == diaryId){
+                userDiary.setTitle(diary.getTitle());
+                diaryRepository.save(userDiary);
+                return "updated diary successful";
+            }
+        }
+        throw new NotFoundException("diary not found");
     }
 
     @Transactional
     public String deleteDiary(int userId, int diaryId) {
-        Optional<User> user = userRepository.findById(userId);
-        if(user.isEmpty()){
-            throw new NotFoundException("User not found");
-        }
 
-        User currentUser = user.get();
+        Optional<Diary> checkDiary = diaryRepository.findById(diaryId);
+        if(!checkDiary.isPresent()){
+            throw new NotFoundException("diary not found");
+        }
+        User currentUser = userRepository.findById(userId).get();
 
         for (Diary d : currentUser.getDiaries()) {
             if(d.getId() == diaryId){
-                SectionDbDAO.deleteChildSections(diaryId);
+                sectionDbDAO.deleteChildSections(diaryId);
                 diaryRepository.deleteById(diaryId);
                 return "you delete diary with id " + diaryId;
             }
         }
-        return "Can't find the chosen diary.";
+        throw new NotFoundException("diary not found");
     }
 }

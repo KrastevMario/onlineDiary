@@ -1,8 +1,10 @@
 package com.diary_online.diary_online.controller;
 
 
+import com.diary_online.diary_online.exceptions.AuthenticationException;
 import com.diary_online.diary_online.exceptions.BadRequestException;
 import com.diary_online.diary_online.model.dto.SafeUserDTO;
+import com.diary_online.diary_online.model.dto.SuccessDTO;
 import com.diary_online.diary_online.model.pojo.Diary;
 import com.diary_online.diary_online.model.pojo.User;
 import com.diary_online.diary_online.service.DiaryService;
@@ -19,32 +21,29 @@ public class DiaryController extends AbstractController{
     @Autowired
     SessionController sessionController;
 
-    @PutMapping("/users/diaries")
-    public String addDiary(@RequestBody Diary diary, HttpSession ses){
-        //TODO: VERIFICATIONS
-        int userId = sessionController.getLoggedUser(ses).getId();
-        return diaryService.addDiary(userId,diary,ses);
-    }
-
-    @GetMapping("/users/diaries/{diary_id}")
-    public Diary getDiary(@PathVariable(value = "diary_id") int diaryId){
-        return diaryService.getDiary(diaryId);
-    }
-
-    @PostMapping("/users/diaries/{diary_id}")
-    public String updateDiary(@PathVariable(value = "diary_id") int diaryId,@RequestBody Diary diary,HttpSession session){
-        if(sessionController.isLoggedIn(session)){
-            int myId = sessionController.getLoggedUser(session).getId();
-            return diaryService.updateDiary(diaryId,diary);
+    @PutMapping("/diaries")
+    public SuccessDTO addDiary(@RequestBody Diary diary, HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to use this option.");
         }
-        else{
-            return "You are not logged in";
-        }
-
+        int userId = sessionController.getLoggedUser(session).getId();
+        return new SuccessDTO(diaryService.addDiary(userId,diary));
     }
 
-    @DeleteMapping("/diary/{diary_id}")
+    @PostMapping("/diaries/{diary_id}")
+    public SuccessDTO updateDiary(@PathVariable(value = "diary_id") int diaryId,@RequestBody Diary diary,HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to use this option.");
+        }
+        int userId = sessionController.getLoggedUser(session).getId();
+        return new SuccessDTO(diaryService.updateDiary(userId,diaryId,diary));
+    }
+
+    @DeleteMapping("/diaries/{diary_id}")
     public String deleteDiary(@PathVariable(value = "diary_id") int diaryId,HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to use this option.");
+        }
         int userId = sessionController.getLoggedUser(session).getId();
         return diaryService.deleteDiary(userId,diaryId);
     }
