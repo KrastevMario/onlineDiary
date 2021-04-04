@@ -1,8 +1,5 @@
 package com.diary_online.diary_online.model.dao;
 
-import com.diary_online.diary_online.model.dto.SectionFromDbDTO;
-import com.diary_online.diary_online.model.dto.UserFromDbDTO;
-import com.diary_online.diary_online.model.pojo.Diary;
 import com.diary_online.diary_online.model.pojo.Section;
 import com.diary_online.diary_online.model.pojo.User;
 import org.springframework.beans.factory.annotation.Autowired;

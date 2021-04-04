@@ -2,7 +2,6 @@ package com.diary_online.diary_online.controller;
 
 
 import com.diary_online.diary_online.exceptions.AuthenticationException;
-import com.diary_online.diary_online.exceptions.BadRequestException;
 import com.diary_online.diary_online.model.dto.*;
 import com.diary_online.diary_online.model.pojo.Section;
 import com.diary_online.diary_online.model.pojo.User;

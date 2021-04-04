@@ -1,6 +1,8 @@
 package com.diary_online.diary_online.controller;
 
 import com.diary_online.diary_online.exceptions.AuthenticationException;
+import com.diary_online.diary_online.model.dto.CommentDTO;
+import com.diary_online.diary_online.model.dto.SectionDTO;
 import com.diary_online.diary_online.model.dto.SuccessDTO;
 import com.diary_online.diary_online.model.pojo.Comment;
 import com.diary_online.diary_online.service.CommentService;
@@ -11,7 +13,7 @@ import javax.servlet.http.HttpSession;
 
 
 @RestController
-public class CommentControllers extends AbstractController{
+public class CommentController extends AbstractController{
 
     @Autowired
     CommentService commentService;
@@ -36,12 +38,12 @@ public class CommentControllers extends AbstractController{
         return new SuccessDTO(commentService.deleteComment(userId,commentId));
     }
 
-    @GetMapping("/comments/{comment_id}")
-    public Comment getComment( @PathVariable(name = "comment_id") int commentId, HttpSession session){
-        //TODO: FINISH WITH THE VALIDATIONS AND RETURN THE RIGHT INFO
+    @GetMapping("comments/{comment_id}")
+    public CommentDTO getComment(@PathVariable(value = "comment_id") int commentId, HttpSession session){
         if(!sessionController.isLoggedIn(session)){
-            throw new AuthenticationException("You must be logged in to be able to use this option.");
+            throw new AuthenticationException("You must be logged in to use this option.");
         }
-        return commentService.getComment(commentId, (int) session.getAttribute("LOGGED_USER_ID"));
+        int userId = sessionController.getLoggedUser(session).getId();
+        return new CommentDTO(commentService.getComment(userId,commentId));
     }
 }

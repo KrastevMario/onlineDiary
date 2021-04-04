@@ -1,6 +1,7 @@
 package com.diary_online.diary_online.controller;
 
 import com.diary_online.diary_online.exceptions.AuthenticationException;
+import com.diary_online.diary_online.model.dto.SectionDTO;
 import com.diary_online.diary_online.model.dto.SectionFromDbDTO;
 import com.diary_online.diary_online.model.dto.SuccessDTO;
 import com.diary_online.diary_online.model.pojo.Section;
@@ -116,15 +117,12 @@ public class SectionController extends AbstractController{
                 .collect(Collectors.toList());
     }
 
-    @GetMapping("/users/shared/sections")
-    public List<SectionFromDbDTO> getSharedSectionsWitMe(HttpSession session){
+    @GetMapping("sections/{section_id}")
+    public SectionDTO getSection(@PathVariable(value = "section_id") int sectionId, HttpSession session){
         if(!sessionController.isLoggedIn(session)){
             throw new AuthenticationException("You must be logged in to use this option.");
         }
         int userId = sessionController.getLoggedUser(session).getId();
-        return sectionService.showSharedSectionsWithUser(userId)
-                .stream()
-                .map(sectionThis -> new SectionFromDbDTO(sectionThis))
-                .collect(Collectors.toList());
+        return new SectionDTO(sectionService.getSection(userId,sectionId));
     }
 }

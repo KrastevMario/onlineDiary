@@ -236,4 +236,22 @@ public class SectionService {
     public String removeDislike(int userId, int sectionId) {
        return sectionDbDAO.removeDislike(userId,sectionId);
     }
+
+    public Section getSection(int userId, int sectionId) {
+        User user = userRepository.findById(userId).get();
+        Optional<Section> s = sectionRepository.findById(sectionId);
+
+        if(!s.isPresent()){
+            throw new NotFoundException("section not found");
+        }
+
+        for (Diary d:user.getDiaries()) {
+            for (Section sec:d.getSections()) {
+                if(sec.getId() == sectionId){
+                    return sec;
+                }
+            }
+        }
+        throw new NotFoundException("cannot found this section in your diaries");
+    }
 }

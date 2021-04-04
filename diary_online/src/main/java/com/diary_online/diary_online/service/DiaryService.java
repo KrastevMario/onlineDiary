@@ -38,7 +38,7 @@ public class DiaryService {
     public String updateDiary(int userId, int diaryId, Diary diary) {
         Optional<Diary> d = diaryRepository.findById(diaryId);
         if(!d.isPresent()){
-            throw new NotFoundException("diary not found");
+            throw new NotFoundException("Diary not found.");
         }
         User user = userRepository.findById(userId).get();
 
@@ -46,10 +46,10 @@ public class DiaryService {
             if(userDiary.getId() == diaryId){
                 userDiary.setTitle(diary.getTitle());
                 diaryRepository.save(userDiary);
-                return "updated diary successful";
+                return "Updated diary successful.";
             }
         }
-        throw new NotFoundException("diary not found");
+        throw new NotFoundException("Diary not found.");
     }
 
     @Transactional
@@ -57,7 +57,7 @@ public class DiaryService {
 
         Optional<Diary> checkDiary = diaryRepository.findById(diaryId);
         if(!checkDiary.isPresent()){
-            throw new NotFoundException("diary not found");
+            throw new NotFoundException("Diary not found.");
         }
         User currentUser = userRepository.findById(userId).get();
 
@@ -65,17 +65,22 @@ public class DiaryService {
             if(d.getId() == diaryId){
                 sectionDbDAO.deleteChildSections(diaryId);
                 diaryRepository.deleteById(diaryId);
-                return "you delete diary with id " + diaryId;
+                return "You deleted diary with title \"" + d.getTitle() + "\"";
             }
         }
-        throw new NotFoundException("diary not found");
+        throw new NotFoundException("Diary not found.");
     }
 
-    public Diary getDiary(int diaryId) {
-        //TODO: FINISH BY RETURNING ALL THE INFO
+    public Diary getDiary(int userId, int diaryId) {
         if(diaryRepository.findById(diaryId).isEmpty()){
             throw new BadRequestException("Invalid diary.");
         }
-        return diaryRepository.findById(diaryId).get();
+        User me = userRepository.findById(userId).get();
+        for (Diary d:me.getDiaries()) {
+            if(d.getId() == diaryId){
+                return d;
+            }
+        }
+        throw new NotFoundException("Diary not found in your diaries.");
     }
 }

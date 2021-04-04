@@ -2,11 +2,9 @@ package com.diary_online.diary_online.controller;
 
 
 import com.diary_online.diary_online.exceptions.AuthenticationException;
-import com.diary_online.diary_online.exceptions.BadRequestException;
-import com.diary_online.diary_online.model.dto.SafeUserDTO;
+import com.diary_online.diary_online.model.dto.DiaryWithOutOwnerDTO;
 import com.diary_online.diary_online.model.dto.SuccessDTO;
 import com.diary_online.diary_online.model.pojo.Diary;
-import com.diary_online.diary_online.model.pojo.User;
 import com.diary_online.diary_online.service.DiaryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -48,11 +46,12 @@ public class DiaryController extends AbstractController{
         return new SuccessDTO(diaryService.deleteDiary(userId,diaryId));
     }
 
-    @GetMapping("/diaries/{diary_id}")
-    public Diary getDiary(@PathVariable(value = "diary_id") int diaryId, HttpSession session){
+    @GetMapping("diaries/{diary_id}")
+    public DiaryWithOutOwnerDTO getDiary(@PathVariable(value = "diary_id") int diaryId, HttpSession session){
         if(!sessionController.isLoggedIn(session)){
             throw new AuthenticationException("You must be logged in to use this option.");
         }
-        return diaryService.getDiary(diaryId);
+        int userId = sessionController.getLoggedUser(session).getId();
+        return new DiaryWithOutOwnerDTO(diaryService.getDiary(userId,diaryId));
     }
 }
