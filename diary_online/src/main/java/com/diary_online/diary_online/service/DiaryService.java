@@ -4,6 +4,7 @@ import com.diary_online.diary_online.controller.SessionController;
 import com.diary_online.diary_online.exceptions.BadRequestException;
 import com.diary_online.diary_online.exceptions.NotFoundException;
 import com.diary_online.diary_online.model.dao.SectionDbDAO;
+import com.diary_online.diary_online.model.dto.DiaryWithOutOwnerDTO;
 import com.diary_online.diary_online.model.dto.SafeUserDTO;
 import com.diary_online.diary_online.model.pojo.Diary;
 import com.diary_online.diary_online.model.pojo.User;
@@ -72,5 +73,21 @@ public class DiaryService {
             }
         }
         throw new NotFoundException("diary not found");
+    }
+
+    public Diary getDiary(int userId, int diaryId) {
+        Optional<Diary> currDiary = diaryRepository.findById(diaryId);
+        if(!currDiary.isPresent()){
+            throw new NotFoundException("diary not found");
+        }
+
+        User me = userRepository.findById(userId).get();
+
+        for (Diary d:me.getDiaries()) {
+            if(d.getId() == diaryId){
+                return d;
+            }
+        }
+        throw new NotFoundException("diary not found in your diaries");
     }
 }

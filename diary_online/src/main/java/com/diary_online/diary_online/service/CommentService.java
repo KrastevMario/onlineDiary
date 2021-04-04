@@ -76,4 +76,18 @@ public class CommentService {
         }
         throw new BadRequestException("You are not the owner of the comment");
     }
+
+    public Comment getComment(int userId, int commentId) {
+        Optional<Comment> com = commentRepository.findById(commentId);
+        if(!com.isPresent()){
+            throw new NotFoundException("comment not found");
+        }
+
+        Comment comment = com.get();
+
+        if(comment.getCommentOwner().getId() == userId){
+            return comment;
+        }
+        throw new BadRequestException("You are not the ownre of the comment");
+    }
 }

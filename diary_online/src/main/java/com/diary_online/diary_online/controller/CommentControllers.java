@@ -1,6 +1,8 @@
 package com.diary_online.diary_online.controller;
 
 import com.diary_online.diary_online.exceptions.AuthenticationException;
+import com.diary_online.diary_online.model.dto.CommentDTO;
+import com.diary_online.diary_online.model.dto.SectionDTO;
 import com.diary_online.diary_online.model.dto.SuccessDTO;
 import com.diary_online.diary_online.model.pojo.Comment;
 import com.diary_online.diary_online.service.CommentService;
@@ -34,5 +36,14 @@ public class CommentControllers extends AbstractController{
         }
         int userId = sessionController.getLoggedUser(session).getId();
         return new SuccessDTO(commentService.deleteComment(userId,comentId));
+    }
+
+    @GetMapping("comments/{comment_id}")
+    public CommentDTO getDiary(@PathVariable(value = "comment_id") int commentId, HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to use this option.");
+        }
+        int userId = sessionController.getLoggedUser(session).getId();
+        return new CommentDTO(commentService.getComment(userId,commentId));
     }
 }

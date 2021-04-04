@@ -1,6 +1,10 @@
 package com.diary_online.diary_online.controller;
 
 import com.diary_online.diary_online.exceptions.AuthenticationException;
+import com.diary_online.diary_online.model.dao.SectionDbDAO;
+import com.diary_online.diary_online.model.dto.DiaryWithOutOwnerDTO;
+import com.diary_online.diary_online.model.dto.SectionDTO;
+import com.diary_online.diary_online.model.dto.SectionFromDbDTO;
 import com.diary_online.diary_online.model.dto.SuccessDTO;
 import com.diary_online.diary_online.model.pojo.Diary;
 import com.diary_online.diary_online.model.pojo.Section;
@@ -101,4 +105,15 @@ public class SectionController extends AbstractController{
         int userId = sessionController.getLoggedUser(session).getId();
         return new SuccessDTO(sectionService.removeDislike(userId,sectionId));
     }
+
+
+    @GetMapping("sections/{section_id}")
+    public SectionDTO getDiary(@PathVariable(value = "section_id") int sectionId, HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to use this option.");
+        }
+        int userId = sessionController.getLoggedUser(session).getId();
+        return new SectionDTO(sectionService.getSection(userId,sectionId));
+    }
+
 }

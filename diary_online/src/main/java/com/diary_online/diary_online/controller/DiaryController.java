@@ -3,6 +3,7 @@ package com.diary_online.diary_online.controller;
 
 import com.diary_online.diary_online.exceptions.AuthenticationException;
 import com.diary_online.diary_online.exceptions.BadRequestException;
+import com.diary_online.diary_online.model.dto.DiaryWithOutOwnerDTO;
 import com.diary_online.diary_online.model.dto.SafeUserDTO;
 import com.diary_online.diary_online.model.dto.SuccessDTO;
 import com.diary_online.diary_online.model.pojo.Diary;
@@ -40,12 +41,20 @@ public class DiaryController extends AbstractController{
     }
 
     @DeleteMapping("/diaries/{diary_id}")
-    public String deleteDiary(@PathVariable(value = "diary_id") int diaryId,HttpSession session){
+    public SuccessDTO deleteDiary(@PathVariable(value = "diary_id") int diaryId,HttpSession session){
         if(!sessionController.isLoggedIn(session)){
             throw new AuthenticationException("You must be logged in to use this option.");
         }
         int userId = sessionController.getLoggedUser(session).getId();
-        return diaryService.deleteDiary(userId,diaryId);
+        return new SuccessDTO(diaryService.deleteDiary(userId,diaryId));
     }
 
+    @GetMapping("diaries/{diary_id}")
+    public DiaryWithOutOwnerDTO getDiary(@PathVariable(value = "diary_id") int diaryId, HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to use this option.");
+        }
+        int userId = sessionController.getLoggedUser(session).getId();
+        return new DiaryWithOutOwnerDTO(diaryService.getDiary(userId,diaryId));
+    }
 }
