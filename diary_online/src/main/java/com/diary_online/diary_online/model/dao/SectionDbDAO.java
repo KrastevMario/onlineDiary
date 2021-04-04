@@ -3,6 +3,9 @@ package com.diary_online.diary_online.model.dao;
 import com.diary_online.diary_online.exceptions.BadRequestException;
 import com.diary_online.diary_online.exceptions.NotFoundException;
 import com.diary_online.diary_online.model.dto.SectionFromDbDTO;
+import com.diary_online.diary_online.model.pojo.Diary;
+import com.diary_online.diary_online.model.pojo.Section;
+import com.diary_online.diary_online.repository.DiaryRepository;
 import com.diary_online.diary_online.repository.SectionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -22,12 +25,14 @@ public class SectionDbDAO {
     JdbcTemplate jdbcTemplate;
     @Autowired
     SectionRepository sectionRepository;
+    @Autowired
+    DiaryRepository diaryRepository;
 
-    public List<SectionFromDbDTO> getPublicSectionsFollowedByMe(int userId) {
+    public List<Section> getPublicSectionsFollowedByUser(int userId) {
 
-        List<SectionFromDbDTO> list = new ArrayList<>();
+        List<Section> list = new ArrayList<>();
 
-        String sql = "SELECT s.id,s.title,s.content,s.privacy,s.created_at FROM sections AS s\n" +
+        String sql = "SELECT s.id,s.title,s.content,s.privacy,s.created_at, s.diary_id FROM sections AS s\n" +
                 "JOIN diaries AS d ON d.id = s.diary_id\n" +
                 "JOIN users AS u ON u.id = d.user_id\n" +
                 "JOIN users_have_followers AS uhf ON uhf.user_id = u.id\n" +
@@ -39,10 +44,10 @@ public class SectionDbDAO {
             ps.setInt(1, userId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                SectionFromDbDTO section = new SectionFromDbDTO(rs.getInt("id"), rs.getString("title"),
+                Section section = new Section(rs.getInt("id"), rs.getString("title"),
                         rs.getString("content"), rs.getString("privacy"),
-                        rs.getTimestamp("created_at").toLocalDateTime());
-
+                        rs.getTimestamp("created_at").toLocalDateTime(),
+                        new Diary(diaryRepository.findById(rs.getInt("diary_id")).get()));
 
                 list.add(section);
             }
@@ -54,10 +59,10 @@ public class SectionDbDAO {
     }
 
 
-    public List<SectionFromDbDTO> getSharedWithMeSection(int userId) {
-        List<SectionFromDbDTO> list = new ArrayList<>();
+    public List<Section> getSharedWithUserSections(int userId) {
+        List<Section> list = new ArrayList<>();
 
-        String sql = "SELECT s.id,s.title,s.content,s.privacy,s.created_at FROM sections AS s\n" +
+        String sql = "SELECT s.id,s.title,s.content,s.privacy,s.created_at,s.diary_id FROM sections AS s\n" +
                 "JOIN shared_sections AS ss ON ss.section_id = s.id\n" +
                 "JOIN users AS u ON u.id = ss.user_id\n" +
                 "WHERE u.id = ?\n";
@@ -67,9 +72,10 @@ public class SectionDbDAO {
             ps.setInt(1, userId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                SectionFromDbDTO section = new SectionFromDbDTO(rs.getInt("id"), rs.getString("title"),
+                Section section = new Section(rs.getInt("id"), rs.getString("title"),
                         rs.getString("content"), rs.getString("privacy"),
-                        rs.getTimestamp("created_at").toLocalDateTime());
+                        rs.getTimestamp("created_at").toLocalDateTime(),
+                        new Diary(diaryRepository.findById(rs.getInt("diary_id")).get()));
 
 
                 list.add(section);
@@ -81,12 +87,12 @@ public class SectionDbDAO {
         return list;
     }
 
-    public List<SectionFromDbDTO> getMySection(int userId) {
+    public List<Section> getMySection(int userId) {
 
-        List<SectionFromDbDTO> list = new ArrayList<>();
+        List<Section> list = new ArrayList<>();
 
         String sql = " \n" +
-                "        SELECT s.id,s.title,s.content,s.privacy,s.created_at FROM sections AS s\n" +
+                "        SELECT s.id,s.title,s.content,s.privacy,s.created_at,s.diary_id FROM sections AS s\n" +
                 "        JOIN diaries AS d ON d.id = s.diary_id\n" +
                 "        JOIN users AS u ON u.id = d.user_id\n" +
                 "        WHERE u.id = ?";
@@ -96,9 +102,10 @@ public class SectionDbDAO {
             ps.setInt(1, userId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                SectionFromDbDTO section = new SectionFromDbDTO(rs.getInt("id"), rs.getString("title"),
+                Section section = new Section(rs.getInt("id"), rs.getString("title"),
                         rs.getString("content"), rs.getString("privacy"),
-                        rs.getTimestamp("created_at").toLocalDateTime());
+                        rs.getTimestamp("created_at").toLocalDateTime(),
+                        new Diary(diaryRepository.findById(rs.getInt("diary_id")).get()));
 
 
                 list.add(section);
@@ -208,6 +215,33 @@ public class SectionDbDAO {
             e.printStackTrace();
         }
         throw new NotFoundException("connection fail");
+    }
+
+    public List<Section> getAllUserSections(int userId) {
+        List<Section> list = new ArrayList<>();
+
+        String sql = "SELECT s.id,s.title,s.content,s.privacy,s.created_at,s.diary_id FROM sections AS s\n" +
+                "JOIN diaries AS d ON d.id = s.diary_id\n" +
+                "JOIN users AS u ON u.id = d.user_id\n" +
+                "WHERE u.id = ?\n" +
+                "ORDER BY s.created_at DESC";
+        try (Connection connection = jdbcTemplate.getDataSource().getConnection()) {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, userId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Section section = new Section(rs.getInt("id"), rs.getString("title"),
+                        rs.getString("content"), rs.getString("privacy"),
+                        rs.getTimestamp("created_at").toLocalDateTime(),
+                        new Diary(diaryRepository.findById(rs.getInt("diary_id")).get()));
+
+                list.add(section);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return list;
     }
 
 }

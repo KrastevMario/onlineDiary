@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -214,6 +215,19 @@ public class SectionService {
         throw new BadRequestException("You never share the section with this user");
     }
 
+    public List<Section> getMySections(int userId) {
+        if(userRepository.findById(userId).isEmpty()){
+            throw new BadRequestException("The user is invalid.");
+        }
+        return sectionDbDAO.getAllUserSections(userId);
+    }
+
+    public List<Section> showSharedSectionsWithUser(int userId) {
+        if(userRepository.findById(userId).isEmpty()){
+            throw new BadRequestException("The user is invalid.");
+        }
+        return sectionDbDAO.getSharedWithUserSections(userId);
+    }
 
     public String removeLike(int userId, int sectionId) {
        return sectionDbDAO.removeLike(userId,sectionId);

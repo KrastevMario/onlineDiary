@@ -3,6 +3,7 @@ package com.diary_online.diary_online.model.pojo;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -17,6 +18,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "users")
 public class User {
     @Id
@@ -63,4 +65,14 @@ public class User {
     @OneToMany(mappedBy = "commentOwner")
     @JsonManagedReference(value = "user-comment")
     List<Comment> comments;
+
+    public User(int id, String first_name, String last_name, String email, String username, String password, LocalDateTime created_at) {
+        this.id = id;
+        this.firstName = first_name;
+        this.lastName = last_name;
+        this.email = email;
+        this.username = username;
+        this.password = password;
+        this.createdAt = created_at;
+    }
 }

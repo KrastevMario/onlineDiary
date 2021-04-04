@@ -3,6 +3,7 @@ package com.diary_online.diary_online.model.pojo;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -60,4 +61,13 @@ public class Section {
     @OneToMany(mappedBy = "commentSection")
     @JsonManagedReference(value = "section-comment")
     List<Comment> comments;
+
+    public Section(int id, String title, String content, String privacy, LocalDateTime created_at, Diary diary) {
+        this.id = id;
+        this.title = title;
+        this.content = content;
+        this.privacy = privacy;
+        this.createdAt = created_at;
+        this.diary = diary;
+    }
 }

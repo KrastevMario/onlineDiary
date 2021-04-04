@@ -33,4 +33,11 @@ public class Diary {
     @JsonManagedReference("section-diary")
     List<Section> sections;
 
+    public Diary(Diary diary) {
+        this.id = diary.getId();
+        this.title = diary.getTitle();
+        this.createdAt = diary.createdAt;
+        this.owner = diary.getOwner();
+        this.sections = diary.getSections();
+    }
 }

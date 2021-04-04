@@ -4,7 +4,6 @@ import com.diary_online.diary_online.controller.SessionController;
 import com.diary_online.diary_online.exceptions.BadRequestException;
 import com.diary_online.diary_online.exceptions.NotFoundException;
 import com.diary_online.diary_online.model.dao.SectionDbDAO;
-import com.diary_online.diary_online.model.dto.SafeUserDTO;
 import com.diary_online.diary_online.model.pojo.Diary;
 import com.diary_online.diary_online.model.pojo.User;
 import com.diary_online.diary_online.repository.DiaryRepository;
@@ -12,9 +11,7 @@ import com.diary_online.diary_online.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.HttpSession;
 import javax.transaction.Transactional;
-import java.beans.Transient;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -72,5 +69,13 @@ public class DiaryService {
             }
         }
         throw new NotFoundException("diary not found");
+    }
+
+    public Diary getDiary(int diaryId) {
+        //TODO: FINISH BY RETURNING ALL THE INFO
+        if(diaryRepository.findById(diaryId).isEmpty()){
+            throw new BadRequestException("Invalid diary.");
+        }
+        return diaryRepository.findById(diaryId).get();
     }
 }

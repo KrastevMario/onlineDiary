@@ -6,8 +6,7 @@ import com.diary_online.diary_online.model.dao.SectionDbDAO;
 import com.diary_online.diary_online.model.dao.UserDAO;
 import com.diary_online.diary_online.model.dto.LoginUserDTO;
 import com.diary_online.diary_online.model.dto.SafeUserDTO;
-import com.diary_online.diary_online.model.dto.SectionFromDbDTO;
-import com.diary_online.diary_online.model.dto.UserFromDbDTO;
+import com.diary_online.diary_online.model.pojo.Section;
 import com.diary_online.diary_online.model.pojo.User;
 import com.diary_online.diary_online.repository.SectionRepository;
 import com.diary_online.diary_online.repository.UserRepository;
@@ -126,15 +125,15 @@ public class UserService {
     public String followUser(int userId, int userToFollowId) {
         //check if the user exists
         if (userRepository.findById(userId).isEmpty()) {
-            return "Something went wrong while trying to execute your request.";
+            throw new BadRequestException("Something went wrong while trying to execute your request.");
         }
         //check if the follower exists
         if (userRepository.findById(userToFollowId).isEmpty()) {
-            return "You are trying to follow an invalid user.";
+            throw new BadRequestException("You are trying to follow an invalid user.");
         }
         //check if the user is already following the followedUser
         if (userDAO.isAlreadyFollowing(userId, userToFollowId)) {
-            return "You are already following this user. Cannot follow twice the same user.";
+            throw new BadRequestException("You are already following this user. Cannot follow twice the same user.");
         }
 
         User user = userRepository.findById(userId).get();
@@ -143,20 +142,6 @@ public class UserService {
         userRepository.save(userToFollow);
 
         return "You started following " + userToFollow.getUsername();
-    }
-
-    public List<SectionFromDbDTO> getPublicSectionFromFollowedUsers(int userId) {
-        if(userRepository.findById(userId).isEmpty()){
-            throw new BadRequestException("There was a problem reading the user's Id.");
-        }
-        return sectionDbDAO.getPublicSectionsFollowedByMe(userId);
-    }
-
-    public List<SectionFromDbDTO> getMySections(int userId) {
-        if(userRepository.findById(userId).isEmpty()){
-            throw new BadRequestException("The user is invalid.");
-        }
-        return userDAO.showAllMySection(userId);
     }
 
     public String unfollowUser(int userId, int userToUnfollowId) {
@@ -177,6 +162,13 @@ public class UserService {
         userRepository.save(unfollowUser);
 
         return "You unfollowed " + unfollowUser.getUsername();
+    }
+
+    public List<Section> getPublicSectionFromFollowedUsers(int userId) {
+        if(userRepository.findById(userId).isEmpty()){
+            throw new BadRequestException("There was a problem reading the user's Id.");
+        }
+        return sectionDbDAO.getPublicSectionsFollowedByUser(userId);
     }
 
     public String updateUser(User userNewInfo, int myId) {
@@ -220,17 +212,10 @@ public class UserService {
                 + userUpdated.getLastName() + "\n" + userUpdated.getEmail();
     }
 
-    public List<UserFromDbDTO> showMyFollowers(int userId) {
+    public List<User> showMyFollowers(int userId) {
         if(userRepository.findById(userId).isEmpty()){
             throw new BadRequestException("The user is invalid.");
         }
         return userDAO.showFollowers(userId);
-    }
-
-    public List<SectionFromDbDTO> showSharedSectionsWithMe(int userId) {
-        if(userRepository.findById(userId).isEmpty()){
-            throw new BadRequestException("The user is invalid.");
-        }
-        return sectionDbDAO.getSharedWithMeSection(userId);
     }
 }

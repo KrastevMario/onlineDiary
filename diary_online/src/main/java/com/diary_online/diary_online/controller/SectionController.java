@@ -1,8 +1,8 @@
 package com.diary_online.diary_online.controller;
 
 import com.diary_online.diary_online.exceptions.AuthenticationException;
+import com.diary_online.diary_online.model.dto.SectionFromDbDTO;
 import com.diary_online.diary_online.model.dto.SuccessDTO;
-import com.diary_online.diary_online.model.pojo.Diary;
 import com.diary_online.diary_online.model.pojo.Section;
 import com.diary_online.diary_online.service.SectionService;
 import com.diary_online.diary_online.service.UserService;
@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 public class SectionController extends AbstractController{
@@ -100,5 +102,29 @@ public class SectionController extends AbstractController{
         }
         int userId = sessionController.getLoggedUser(session).getId();
         return new SuccessDTO(sectionService.removeDislike(userId,sectionId));
+    }
+
+    @GetMapping("/users/sections")
+    public List<SectionFromDbDTO> getUserSections(HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to use this option.");
+        }
+        int userId = sessionController.getLoggedUser(session).getId();
+        return sectionService.getMySections(userId)
+                .stream()
+                .map(sectionThis -> new SectionFromDbDTO(sectionThis))
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/users/shared/sections")
+    public List<SectionFromDbDTO> getSharedSectionsWitMe(HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to use this option.");
+        }
+        int userId = sessionController.getLoggedUser(session).getId();
+        return sectionService.showSharedSectionsWithUser(userId)
+                .stream()
+                .map(sectionThis -> new SectionFromDbDTO(sectionThis))
+                .collect(Collectors.toList());
     }
 }

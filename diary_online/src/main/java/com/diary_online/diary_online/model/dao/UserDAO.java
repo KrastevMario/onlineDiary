@@ -2,6 +2,7 @@ package com.diary_online.diary_online.model.dao;
 
 import com.diary_online.diary_online.model.dto.SectionFromDbDTO;
 import com.diary_online.diary_online.model.dto.UserFromDbDTO;
+import com.diary_online.diary_online.model.pojo.Diary;
 import com.diary_online.diary_online.model.pojo.Section;
 import com.diary_online.diary_online.model.pojo.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +25,6 @@ public class UserDAO {
 
     public boolean isAlreadyFollowing(int userId, int userToFollowId) {
         String sql = "SELECT user_id, following_user_id FROM users_have_followers WHERE following_user_id = ? AND user_id = ?";
-
-
         try (Connection connection = jdbcTemplate.getDataSource().getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
             preparedStatement.setInt(1, userId);
@@ -38,37 +37,10 @@ public class UserDAO {
         return false;
     }
 
-    public List<SectionFromDbDTO> showAllMySection(int userId) {
-        List<SectionFromDbDTO> list = new ArrayList<>();
+    public List<User> showFollowers(int myId) {
+        List<User> list = new ArrayList<>();
 
-        String sql = "SELECT s.id,s.title,s.content,s.privacy,s.created_at FROM sections AS s\n" +
-                "JOIN diaries AS d ON d.id = s.diary_id\n" +
-                "JOIN users AS u ON u.id = d.user_id\n" +
-                "WHERE u.id = ?\n" +
-                "ORDER BY s.created_at DESC";
-        try (Connection connection = jdbcTemplate.getDataSource().getConnection()) {
-            PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setInt(1, userId);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                SectionFromDbDTO section = new SectionFromDbDTO(rs.getInt("id"), rs.getString("title"),
-                        rs.getString("content"), rs.getString("privacy"),
-                        rs.getTimestamp("created_at").toLocalDateTime());
-
-
-                list.add(section);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return list;
-    }
-
-    public List<UserFromDbDTO> showFollowers(int myId) {
-        List<UserFromDbDTO> list = new ArrayList<>();
-
-        String sql = "SELECT u.first_name,u.last_name,u.email,u.username FROM users AS u\n" +
+        String sql = "SELECT u.id,u.first_name,u.last_name,u.email,u.username,u.password,created_at FROM users AS u\n" +
                 "JOIN users_have_followers AS uhf ON uhf.following_user_id = u.id\n" +
                 "WHERE uhf.user_id = ?;";
         try (Connection connection = jdbcTemplate.getDataSource().getConnection()) {
@@ -76,13 +48,16 @@ public class UserDAO {
             ps.setInt(1, myId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                UserFromDbDTO userFromDbDTO = new UserFromDbDTO(rs.getString("first_name"),
+                User user = new User(rs.getInt("id"),
+                        rs.getString("first_name"),
                         rs.getString("last_name"),
                         rs.getString("email"),
-                        rs.getString("username"));
+                        rs.getString("username"),
+                        rs.getString("password"),
+                        rs.getTimestamp("created_at").toLocalDateTime()
+                );
 
-
-                list.add(userFromDbDTO);
+                list.add(user);
             }
         } catch (SQLException e) {
             e.printStackTrace();

@@ -27,12 +27,21 @@ public class CommentControllers extends AbstractController{
         return new SuccessDTO(commentService.addComment(comment,userId,sectionId));
     }
 
-    @DeleteMapping("/comments/{coment_id}")
-    public SuccessDTO deleteComment( @PathVariable(name = "coment_id") int comentId, HttpSession session){
+    @DeleteMapping("/comments/{comment_id}")
+    public SuccessDTO deleteComment( @PathVariable(name = "comment_id") int commentId, HttpSession session){
         if(!sessionController.isLoggedIn(session)){
             throw new AuthenticationException("You must be logged in to use this option.");
         }
         int userId = sessionController.getLoggedUser(session).getId();
-        return new SuccessDTO(commentService.deleteComment(userId,comentId));
+        return new SuccessDTO(commentService.deleteComment(userId,commentId));
+    }
+
+    @GetMapping("/comments/{comment_id}")
+    public Comment getComment( @PathVariable(name = "comment_id") int commentId, HttpSession session){
+        //TODO: FINISH WITH THE VALIDATIONS AND RETURN THE RIGHT INFO
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to be able to use this option.");
+        }
+        return commentService.getComment(commentId, (int) session.getAttribute("LOGGED_USER_ID"));
     }
 }

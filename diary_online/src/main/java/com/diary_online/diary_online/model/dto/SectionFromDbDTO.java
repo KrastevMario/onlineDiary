@@ -1,5 +1,6 @@
 package com.diary_online.diary_online.model.dto;
 
+import com.diary_online.diary_online.model.pojo.Section;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -25,5 +26,13 @@ public class SectionFromDbDTO {
         this.content = content;
         this.privacy = privacy;
         this.createdAt = createdAt;
+    }
+
+    public SectionFromDbDTO(Section section) {
+        this.id = section.getId();
+        this.title = section.getTitle();
+        this.content = section.getContent();
+        this.privacy = section.getPrivacy();
+        this.createdAt = section.getCreatedAt();
     }
 }

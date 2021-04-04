@@ -1,9 +1,9 @@
 package com.diary_online.diary_online.service;
 
+import com.diary_online.diary_online.exceptions.AuthenticationException;
 import com.diary_online.diary_online.exceptions.BadRequestException;
 import com.diary_online.diary_online.exceptions.NotFoundException;
 import com.diary_online.diary_online.model.dao.SectionDbDAO;
-import com.diary_online.diary_online.model.dto.SectionFromDbDTO;
 import com.diary_online.diary_online.model.pojo.Comment;
 import com.diary_online.diary_online.model.pojo.Section;
 import com.diary_online.diary_online.model.pojo.User;
@@ -40,12 +40,12 @@ public class CommentService {
        Section section = sec.get();
         User user = userRepository.findById(userId).get();
 
-        List<SectionFromDbDTO> accessibleSection = new ArrayList<>();
-        accessibleSection.addAll(sectionDbDAO.getPublicSectionsFollowedByMe(userId));
-        accessibleSection.addAll(sectionDbDAO.getSharedWithMeSection(userId));
+        List<Section> accessibleSection = new ArrayList<>();
+        accessibleSection.addAll(sectionDbDAO.getPublicSectionsFollowedByUser(userId));
+        accessibleSection.addAll(sectionDbDAO.getSharedWithUserSections(userId));
         accessibleSection.addAll(sectionDbDAO.getMySection(userId));
 
-        for (SectionFromDbDTO s: accessibleSection) {
+        for (Section s: accessibleSection) {
             if(s.getId() == sectionId && UtilSection.isVisible(section)){  //i have private sections
                 Comment c = new Comment();
                 c.setCommentOwner(user);
@@ -76,4 +76,26 @@ public class CommentService {
         }
         throw new BadRequestException("You are not the owner of the comment");
     }
+
+    public Comment getComment(int commentId, int userId) {
+        if(commentRepository.findById(commentId).isEmpty()){
+            throw new BadRequestException("The comment is invalid or inexistent.");
+        }
+        Comment comment = commentRepository.findById(commentId).get();
+        Section commentSection = comment.getCommentSection();
+        if(!UtilSection.isVisible(commentSection)){
+            if(userId != commentSection.getDiary().getOwner().getId()) {
+                throw new AuthenticationException("You do NOT have the right to see the comment " +
+                        "because the section is private and you are not the owner.");
+            }
+        }
+        return comment;
+    }
 }
+
+/*
+accessibleSection.addAll(sectionDbDAO.getPublicSectionsFollowedByMe(userId)
+                .stream()
+                .map(sectionThis -> new SectionFromDbDTO(sectionThis))
+                .collect(Collectors.toList()));
+ */
