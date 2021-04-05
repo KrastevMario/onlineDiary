@@ -6,6 +6,7 @@ import com.diary_online.diary_online.model.dao.SectionDbDAO;
 import com.diary_online.diary_online.model.dao.UserDAO;
 import com.diary_online.diary_online.model.dto.LoginUserDTO;
 import com.diary_online.diary_online.model.dto.SafeUserDTO;
+import com.diary_online.diary_online.model.dto.SectionFromDbDTO;
 import com.diary_online.diary_online.model.pojo.Section;
 import com.diary_online.diary_online.model.pojo.User;
 import com.diary_online.diary_online.repository.SectionRepository;
@@ -217,5 +218,12 @@ public class UserService {
             throw new BadRequestException("The user is invalid.");
         }
         return userDAO.showFollowers(userId);
+    }
+
+    public List<SectionFromDbDTO> showSharedSectionsWithMe(int userId) {
+        if(userRepository.findById(userId).isEmpty()){
+            throw new BadRequestException("The user is invalid.");
+        }
+        return sectionDbDAO.getSharedWithMeSection(userId);
     }
 }

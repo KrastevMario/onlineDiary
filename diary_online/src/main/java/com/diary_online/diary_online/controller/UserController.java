@@ -126,4 +126,12 @@ public class UserController extends AbstractController{
                 .collect(Collectors.toList());
     }
 
+    @GetMapping("/users/shared/sections")
+    public List<SectionFromDbDTO> getSharedSectionsWitMe(HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to use this option.");
+        }
+        int userId = sessionController.getLoggedUser(session).getId();
+        return userService.showSharedSectionsWithMe(userId);
+    }
 }
