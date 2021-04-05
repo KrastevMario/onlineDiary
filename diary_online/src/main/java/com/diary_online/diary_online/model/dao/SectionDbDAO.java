@@ -2,7 +2,6 @@ package com.diary_online.diary_online.model.dao;
 
 import com.diary_online.diary_online.exceptions.BadRequestException;
 import com.diary_online.diary_online.exceptions.NotFoundException;
-import com.diary_online.diary_online.model.dto.SectionDTO;
 import com.diary_online.diary_online.model.pojo.Diary;
 import com.diary_online.diary_online.model.pojo.Section;
 import com.diary_online.diary_online.repository.DiaryRepository;
@@ -244,34 +243,6 @@ public class SectionDbDAO {
         return list;
     }
 
-    public List<Section> getSharedWithMeSection(int userId) {
-        List<Section> list = new ArrayList<>();
-
-        String sql = "SELECT s.id,s.title,s.content,s.privacy,s.created_at,diary_id FROM sections AS s\n" +
-                "JOIN shared_sections AS ss ON ss.section_id = s.id\n" +
-                "JOIN users AS u ON u.id = ss.user_id\n" +
-                "WHERE u.id = ?\n";
-
-        try (Connection connection = jdbcTemplate.getDataSource().getConnection()) {
-            PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setInt(1, userId);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                Section section = new Section(rs.getInt("id"), rs.getString("title"),
-                        rs.getString("content"), rs.getString("privacy"),
-                        rs.getTimestamp("created_at").toLocalDateTime(),
-                        diaryRepository.findById(rs.getInt("diary_id")).get());
-
-
-                list.add(section);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return list;
-    }
-
     public int likesCount(int sectionId) {
         String sql = "SELECT COUNT(*) AS quantity FROM sections_have_likes WHERE section_id = ?";
         int numberOfLikes = 0;
@@ -303,5 +274,4 @@ public class SectionDbDAO {
         }
         return numberOfDisLikes;
     }
-
 }

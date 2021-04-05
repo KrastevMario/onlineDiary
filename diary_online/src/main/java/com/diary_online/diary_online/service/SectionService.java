@@ -256,7 +256,7 @@ public class SectionService {
         Optional<Section> s = sectionRepository.findById(sectionId);
 
         if(!s.isPresent()){
-            throw new NotFoundException("section not found");
+            throw new NotFoundException("Section not found.");
         }
 
         for (Diary d:user.getDiaries()) {
@@ -268,6 +268,6 @@ public class SectionService {
                 }
             }
         }
-        throw new NotFoundException("cannot found this section in your diaries");
+        throw new NotFoundException("Cannot find this section in your diaries.");
     }
 }

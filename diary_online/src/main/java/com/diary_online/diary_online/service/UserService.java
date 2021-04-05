@@ -46,19 +46,19 @@ public class UserService {
         if (user == null) {
             throw new BadRequestException("Invalid info!");
         }
-        if(user.getEmail() == null || user.getEmail().isBlank()){
+        if (user.getEmail() == null || user.getEmail().isBlank()) {
             throw new BadRequestException("Please insert an email. Registration failed.");
         }
-        if(user.getUsername() == null || user.getUsername().isBlank()){
+        if (user.getUsername() == null || user.getUsername().isBlank()) {
             throw new BadRequestException("Please insert a username. Registration failed.");
         }
-        if(user.getFirstName() == null || user.getFirstName().isBlank()){
+        if (user.getFirstName() == null || user.getFirstName().isBlank()) {
             throw new BadRequestException("Please insert your first name. Registration failed.");
         }
-        if(user.getLastName() == null || user.getLastName().isBlank()){
+        if (user.getLastName() == null || user.getLastName().isBlank()) {
             throw new BadRequestException("Please insert your last name. Registration failed.");
         }
-        if(user.getPassword() == null || user.getPassword().isBlank()){
+        if (user.getPassword() == null || user.getPassword().isBlank()) {
             throw new BadRequestException("Please insert a password. Registration failed.");
         }
 
@@ -70,7 +70,7 @@ public class UserService {
         }
         //verify the integrity of "password"
         String userPassword = user.getPassword();
-        if(!userPassword.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{6,}$")){
+        if (!userPassword.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{6,}$")) {
             throw new BadRequestException("The password must have at least 6 characters, 1 numeric character," +
                     " 1 lowercase alphabetical character, 1 uppercase alphabetical character");
         }
@@ -123,6 +123,10 @@ public class UserService {
     }
 
     public String followUser(int userId, int userToFollowId) {
+        //not allow user to follow himself
+        if (userId == userToFollowId) {
+            throw new BadRequestException("You cannot follow yourself.");
+        }
         //check if the user exists
         if (userRepository.findById(userId).isEmpty()) {
             throw new BadRequestException("Something went wrong while trying to execute your request.");
@@ -145,17 +149,17 @@ public class UserService {
     }
 
     public String unfollowUser(int userId, int userToUnfollowId) {
-        if(userRepository.findById(userId).isEmpty()){
+        if (userRepository.findById(userId).isEmpty()) {
             throw new AuthenticationException("There's a problem in reading your authentication. Please try to relog to fix the issue.");
         }
-        if(userRepository.findById(userToUnfollowId).isEmpty()){
+        if (userRepository.findById(userToUnfollowId).isEmpty()) {
             throw new BadRequestException("The user you are trying to unfollow is invalid.");
         }
 
         User user = userRepository.findById(userId).get();
         User unfollowUser = userRepository.findById(userToUnfollowId).get();
         //check if the user is following the other user (userToUnfollow)
-        if(!userDAO.isAlreadyFollowing(userId, userToUnfollowId)){
+        if (!userDAO.isAlreadyFollowing(userId, userToUnfollowId)) {
             throw new BadRequestException("Cannot unfollow the user. You are not following " + unfollowUser.getUsername());
         }
         unfollowUser.getFollowers().remove(user);
@@ -165,7 +169,7 @@ public class UserService {
     }
 
     public List<Section> getPublicSectionFromFollowedUsers(int userId) {
-        if(userRepository.findById(userId).isEmpty()){
+        if (userRepository.findById(userId).isEmpty()) {
             throw new BadRequestException("There was a problem reading the user's Id.");
         }
         return sectionDbDAO.getPublicSectionsFollowedByUser(userId);
@@ -180,26 +184,26 @@ public class UserService {
         boolean isFirstNameValid = !(userNewInfo.getFirstName() == null || userNewInfo.getFirstName().isBlank());
         boolean isLastNameValid = !(userNewInfo.getLastName() == null || userNewInfo.getLastName().isBlank());
         boolean isEmailValid = !(userNewInfo.getEmail() == null || userNewInfo.getEmail().isBlank());
-        if (!isUsernameValid && !isFirstNameValid && !isLastNameValid && !isEmailValid){
+        if (!isUsernameValid && !isFirstNameValid && !isLastNameValid && !isEmailValid) {
             throw new BadRequestException("The data cannot be blank.");
         }
 
         //set the data after a verification of the input
         User meUser = userRepository.findById(myId).get(); //contains the new info
 
-        if(isEmailValid) {
+        if (isEmailValid) {
             if (userRepository.existsByEmail(userNewInfo.getEmail())) {
                 throw new BadRequestException("Email already exists!");
             }
             meUser.setEmail(userNewInfo.getEmail());
         }
-        if(isFirstNameValid){
+        if (isFirstNameValid) {
             meUser.setFirstName(userNewInfo.getFirstName());
         }
-        if(isLastNameValid){
+        if (isLastNameValid) {
             meUser.setLastName(userNewInfo.getLastName());
         }
-        if(isUsernameValid) {
+        if (isUsernameValid) {
             if (userRepository.existsByUsername(userNewInfo.getUsername())) {
                 throw new BadRequestException("Username already exists!");
             }
@@ -208,21 +212,15 @@ public class UserService {
         //save the new info
         userRepository.save(meUser);
         User userUpdated = userRepository.findById(meUser.getId()).get();
-        return "Successfully updated. New info: \n" + userUpdated.getUsername() + "\n" + userUpdated.getFirstName() + "\n"
-                + userUpdated.getLastName() + "\n" + userUpdated.getEmail();
+        return "Successfully updated. New info: username:" + userUpdated.getUsername() + "|firstName:" +
+                userUpdated.getFirstName() + "|lastName:" + userUpdated.getLastName() + "|email:" + userUpdated.getEmail();
     }
 
     public List<User> showMyFollowers(int userId) {
-        if(userRepository.findById(userId).isEmpty()){
+        if (userRepository.findById(userId).isEmpty()) {
             throw new BadRequestException("The user is invalid.");
         }
         return userDAO.showFollowers(userId);
     }
 
-    public List<Section> showSharedSectionsWithMe(int userId) {
-        if(userRepository.findById(userId).isEmpty()){
-            throw new BadRequestException("The user is invalid.");
-        }
-        return sectionDbDAO.getSharedWithMeSection(userId);
-    }
 }
