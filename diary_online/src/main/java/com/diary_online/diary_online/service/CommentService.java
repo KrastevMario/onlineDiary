@@ -30,13 +30,13 @@ public class CommentService {
     @Autowired
     SectionDbDAO sectionDbDAO;
 
-    public String addComment( Comment comment,int userId, int sectionId) {
+    public Comment addComment( Comment comment,int userId, int sectionId) {
 
-       Optional<Section> sec = sectionRepository.findById(sectionId);
-       if(!sec.isPresent()){
-           throw new NotFoundException("Cannot found section");
-       }
-       Section section = sec.get();
+        Optional<Section> sec = sectionRepository.findById(sectionId);
+        if(!sec.isPresent()){
+            throw new NotFoundException("Cannot found section");
+        }
+        Section section = sec.get();
         User user = userRepository.findById(userId).get();
 
         List<Section> accessibleSection = new ArrayList<>();
@@ -54,14 +54,14 @@ public class CommentService {
 
                 commentRepository.save(c);
 
-                return "comment added successful.";
+                return c;
             }
         }
 
         throw new NotFoundException("Cannot found section");
     }
 
-    public String deleteComment(int userId, int commentId) {
+    public Comment deleteComment(int userId, int commentId) {
         User user = userRepository.findById(userId).get();
         Optional<Comment> c = commentRepository.findById(commentId);
         if(!c.isPresent()){
@@ -71,7 +71,7 @@ public class CommentService {
 
         if(comment.getCommentOwner() == user){
             commentRepository.deleteById(commentId);
-            return "you delete comment successful";
+            return comment;
         }
         throw new BadRequestException("You are not the owner of the comment");
     }
@@ -112,3 +112,4 @@ public Comment getComment(int commentId, int userId) {
         return comment;
     }
  */
+

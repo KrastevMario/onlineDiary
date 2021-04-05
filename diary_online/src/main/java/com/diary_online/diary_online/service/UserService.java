@@ -122,9 +122,9 @@ public class UserService {
         return safeUsers;
     }
 
-    public String followUser(int userId, int userToFollowId) {
+    public User followUser(int userId, int userToFollowId) {
         //not allow user to follow himself
-        if (userId == userToFollowId) {
+        if(userId == userToFollowId){
             throw new BadRequestException("You cannot follow yourself.");
         }
         //check if the user exists
@@ -145,27 +145,27 @@ public class UserService {
         userToFollow.getFollowers().add(user);
         userRepository.save(userToFollow);
 
-        return "You started following " + userToFollow.getUsername();
+        return userToFollow;
     }
 
-    public String unfollowUser(int userId, int userToUnfollowId) {
-        if (userRepository.findById(userId).isEmpty()) {
+    public User unfollowUser(int userId, int userToUnfollowId) {
+        if(userRepository.findById(userId).isEmpty()){
             throw new AuthenticationException("There's a problem in reading your authentication. Please try to relog to fix the issue.");
         }
-        if (userRepository.findById(userToUnfollowId).isEmpty()) {
+        if(userRepository.findById(userToUnfollowId).isEmpty()){
             throw new BadRequestException("The user you are trying to unfollow is invalid.");
         }
 
         User user = userRepository.findById(userId).get();
         User unfollowUser = userRepository.findById(userToUnfollowId).get();
         //check if the user is following the other user (userToUnfollow)
-        if (!userDAO.isAlreadyFollowing(userId, userToUnfollowId)) {
+        if(!userDAO.isAlreadyFollowing(userId, userToUnfollowId)){
             throw new BadRequestException("Cannot unfollow the user. You are not following " + unfollowUser.getUsername());
         }
         unfollowUser.getFollowers().remove(user);
         userRepository.save(unfollowUser);
 
-        return "You unfollowed " + unfollowUser.getUsername();
+        return unfollowUser;
     }
 
     public List<Section> getPublicSectionFromFollowedUsers(int userId) {
@@ -175,35 +175,35 @@ public class UserService {
         return sectionDbDAO.getPublicSectionsFollowedByUser(userId);
     }
 
-    public String updateUser(User userNewInfo, int myId) {
+    public User updateUser(User userNewInfo, int myId) {
         if (userNewInfo == null) { //the ifs can be merged but it is easier to understand like this
-            return "Invalid info!";
+            throw new BadRequestException("The user's new info is invalid.");
         }
         //check every info that the user has (that can be modified)
         boolean isUsernameValid = !(userNewInfo.getUsername() == null || userNewInfo.getUsername().isBlank());
         boolean isFirstNameValid = !(userNewInfo.getFirstName() == null || userNewInfo.getFirstName().isBlank());
         boolean isLastNameValid = !(userNewInfo.getLastName() == null || userNewInfo.getLastName().isBlank());
         boolean isEmailValid = !(userNewInfo.getEmail() == null || userNewInfo.getEmail().isBlank());
-        if (!isUsernameValid && !isFirstNameValid && !isLastNameValid && !isEmailValid) {
+        if (!isUsernameValid && !isFirstNameValid && !isLastNameValid && !isEmailValid){
             throw new BadRequestException("The data cannot be blank.");
         }
 
         //set the data after a verification of the input
         User meUser = userRepository.findById(myId).get(); //contains the new info
 
-        if (isEmailValid) {
+        if(isEmailValid) {
             if (userRepository.existsByEmail(userNewInfo.getEmail())) {
                 throw new BadRequestException("Email already exists!");
             }
             meUser.setEmail(userNewInfo.getEmail());
         }
-        if (isFirstNameValid) {
+        if(isFirstNameValid){
             meUser.setFirstName(userNewInfo.getFirstName());
         }
-        if (isLastNameValid) {
+        if(isLastNameValid){
             meUser.setLastName(userNewInfo.getLastName());
         }
-        if (isUsernameValid) {
+        if(isUsernameValid) {
             if (userRepository.existsByUsername(userNewInfo.getUsername())) {
                 throw new BadRequestException("Username already exists!");
             }
@@ -211,16 +211,13 @@ public class UserService {
         }
         //save the new info
         userRepository.save(meUser);
-        User userUpdated = userRepository.findById(meUser.getId()).get();
-        return "Successfully updated. New info: username:" + userUpdated.getUsername() + "|firstName:" +
-                userUpdated.getFirstName() + "|lastName:" + userUpdated.getLastName() + "|email:" + userUpdated.getEmail();
+        return userRepository.findById(meUser.getId()).get();
     }
 
-    public List<User> showMyFollowers(int userId) {
-        if (userRepository.findById(userId).isEmpty()) {
+    public List<User> showUserFollowers(int userId) {
+        if(userRepository.findById(userId).isEmpty()){
             throw new BadRequestException("The user is invalid.");
         }
         return userDAO.showFollowers(userId);
     }
-
 }

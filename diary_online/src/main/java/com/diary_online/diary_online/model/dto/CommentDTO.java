@@ -16,10 +16,14 @@ public class CommentDTO {
     private int id;
     private String content;
     private LocalDateTime createdAt;
+    private int sectionId;
+    private int ownerId;
 
     public CommentDTO(Comment comment){
         id = comment.getId();
         content = comment.getContent();
         createdAt = comment.getCreatedAt();
+        this.ownerId = comment.getCommentOwner().getId();
+        this.sectionId = comment.getCommentSection().getId();
     }
 }

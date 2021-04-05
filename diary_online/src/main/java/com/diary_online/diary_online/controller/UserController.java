@@ -60,12 +60,12 @@ public class UserController extends AbstractController {
 
 
     @PutMapping("/users/follow/{userToFollow_id}")
-    public SuccessDTO followUser(@PathVariable(name = "userToFollow_id") int userToFollow, HttpSession session) {
-        if (!sessionController.isLoggedIn(session)) {
+    public UserDTO followUser(@PathVariable(name = "userToFollow_id") int userToFollow, HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
             throw new AuthenticationException("You are not logged in. Please log in.");
         }
         int userId = sessionController.getLoggedUser(session).getId();
-        return new SuccessDTO(userService.followUser(userId, userToFollow));
+        return new UserDTO(userService.followUser(userId,userToFollow));
     }
 
     @GetMapping("/users/logout")
@@ -92,36 +92,37 @@ public class UserController extends AbstractController {
     }
 
     @DeleteMapping("/users/unfollow/{userToUnfollow}")
-    public SuccessDTO unfollowUser(@PathVariable(name = "userToUnfollow") int userToUnfollow, HttpSession session) {
+    public UserDTO unfollowUser(@PathVariable(name = "userToUnfollow") int userToUnfollow, HttpSession session){
         int userId = sessionController.getLoggedUser(session).getId();
-        return new SuccessDTO(userService.unfollowUser(userId, userToUnfollow));
+        return new UserDTO(userService.unfollowUser(userId,userToUnfollow));
     }
 
     @PostMapping("/users/edit")
-    public SuccessDTO updateUser(@RequestBody User userNewInfo, HttpSession session) {
-        if (sessionController.isLoggedIn(session)) {
+    public UserDTO updateUser(@RequestBody User userNewInfo, HttpSession session){
+        if(sessionController.isLoggedIn(session)){
             int myId = sessionController.getLoggedUser(session).getId();
-            return new SuccessDTO(userService.updateUser(userNewInfo, myId));
-        } else {
-            return new SuccessDTO("You are not logged in");
+            return new UserDTO(userService.updateUser(userNewInfo,myId));
+        }
+        else{
+            throw new AuthenticationException("You are not yet logged in to be able to use this function.");
         }
     }
 
     @GetMapping("/users/followers")
-    public List<UserFromDbDTO> myFollowers(HttpSession session) {
-        if (!sessionController.isLoggedIn(session)) {
+    public List<UserDTO> getFollowers(HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
             throw new AuthenticationException("You must be logged in to use this option.");
         }
         int userId = sessionController.getLoggedUser(session).getId();
 //        List<User> fullUsers = userService.showMyFollowers(userId);
-//        List<UserFromDbDTO> usersDTO = new ArrayList<>();
+//        List<UserDTO> usersDTO = new ArrayList<>();
 //        for (User fullUser : fullUsers){
 //            usersDTO.add(new UserFromDbDTO(fullUser));
 //        }
         //return usersDTO;
-        return userService.showMyFollowers(userId)
+        return userService.showUserFollowers(userId)
                 .stream()
-                .map(userThis -> new UserFromDbDTO(userThis))
+                .map(userThis -> new UserDTO(userThis))
                 .collect(Collectors.toList());
     }
 }

@@ -26,16 +26,15 @@ public class DiaryService {
     @Autowired
     SectionDbDAO sectionDbDAO;
 
-    public String addDiary(int userId, Diary diary){
-
+    public Diary addDiary(int userId, Diary diary){
         User owner = userRepository.findById(userId).get();
         diary.setOwner(owner);
         diary.setCreatedAt(LocalDateTime.now());
         diaryRepository.save(diary);
-        return "You successfully added diary " + diary.getTitle();
+        return diary;
     }
 
-    public String updateDiary(int userId, int diaryId, Diary diary) {
+    public Diary updateDiary(int userId, int diaryId, Diary diary) {
         Optional<Diary> d = diaryRepository.findById(diaryId);
         if(!d.isPresent()){
             throw new NotFoundException("Diary not found.");
@@ -46,14 +45,14 @@ public class DiaryService {
             if(userDiary.getId() == diaryId){
                 userDiary.setTitle(diary.getTitle());
                 diaryRepository.save(userDiary);
-                return "Updated diary successful.";
+                return userDiary;
             }
         }
         throw new NotFoundException("Diary not found.");
     }
 
     @Transactional
-    public String deleteDiary(int userId, int diaryId) {
+    public Diary deleteDiary(int userId, int diaryId) {
 
         Optional<Diary> checkDiary = diaryRepository.findById(diaryId);
         if(!checkDiary.isPresent()){
@@ -65,7 +64,7 @@ public class DiaryService {
             if(d.getId() == diaryId){
                 sectionDbDAO.deleteChildSections(diaryId);
                 diaryRepository.deleteById(diaryId);
-                return "You deleted diary with title \"" + d.getTitle() + "\"";
+                return d;
             }
         }
         throw new NotFoundException("Diary not found.");

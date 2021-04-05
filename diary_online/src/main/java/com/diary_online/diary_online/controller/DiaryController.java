@@ -20,30 +20,30 @@ public class DiaryController extends AbstractController{
     SessionController sessionController;
 
     @PutMapping("/diaries")
-    public SuccessDTO addDiary(@RequestBody Diary diary, HttpSession session){
+    public DiaryWithOutOwnerDTO addDiary(@RequestBody Diary diary, HttpSession session){
         if(!sessionController.isLoggedIn(session)){
             throw new AuthenticationException("You must be logged in to use this option.");
         }
         int userId = sessionController.getLoggedUser(session).getId();
-        return new SuccessDTO(diaryService.addDiary(userId,diary));
+        return new DiaryWithOutOwnerDTO(diaryService.addDiary(userId,diary));
     }
 
     @PostMapping("/diaries/{diary_id}")
-    public SuccessDTO updateDiary(@PathVariable(value = "diary_id") int diaryId, @RequestBody Diary diary,HttpSession session){
+    public DiaryWithOutOwnerDTO updateDiary(@PathVariable(value = "diary_id") int diaryId, @RequestBody Diary diary,HttpSession session){
         if(!sessionController.isLoggedIn(session)){
             throw new AuthenticationException("You must be logged in to use this option.");
         }
         int userId = sessionController.getLoggedUser(session).getId();
-        return new SuccessDTO(diaryService.updateDiary(userId,diaryId,diary));
+        return new DiaryWithOutOwnerDTO(diaryService.updateDiary(userId,diaryId,diary));
     }
 
     @DeleteMapping("/diaries/{diary_id}")
-    public SuccessDTO deleteDiary(@PathVariable(value = "diary_id") int diaryId, HttpSession session){
+    public DiaryWithOutOwnerDTO deleteDiary(@PathVariable(value = "diary_id") int diaryId, HttpSession session){
         if(!sessionController.isLoggedIn(session)){
             throw new AuthenticationException("You must be logged in to use this option.");
         }
         int userId = sessionController.getLoggedUser(session).getId();
-        return new SuccessDTO(diaryService.deleteDiary(userId,diaryId));
+        return new DiaryWithOutOwnerDTO(diaryService.deleteDiary(userId,diaryId));
     }
 
     @GetMapping("diaries/{diary_id}")

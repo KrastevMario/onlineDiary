@@ -15,10 +15,12 @@ public class DiaryWithOutOwnerDTO {
     private int id;
     private String title;
     private LocalDateTime createdAt;
+    private int ownerId;
 
-   public DiaryWithOutOwnerDTO(Diary diary){
-       this.id = diary.getId();
-       this.title = diary.getTitle();
-       this.createdAt = diary.getCreatedAt();
-   }
+    public DiaryWithOutOwnerDTO(Diary diary){
+        this.id = diary.getId();
+        this.title = diary.getTitle();
+        this.createdAt = diary.getCreatedAt();
+        this.ownerId = diary.getOwner().getId();
+    }
 }
