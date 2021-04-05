@@ -125,4 +125,16 @@ public class SectionController extends AbstractController{
         int userId = sessionController.getLoggedUser(session).getId();
         return new SectionDTO(sectionService.getSection(userId,sectionId));
     }
+
+    @GetMapping("/users/shared/sections")
+    public List<SectionFromDbDTO> getSharedSectionsWitMe(HttpSession session){
+        if(!sessionController.isLoggedIn(session)){
+            throw new AuthenticationException("You must be logged in to use this option.");
+        }
+        int userId = sessionController.getLoggedUser(session).getId();
+        return sectionService.showSharedSectionsWithUser(userId)
+                .stream()
+                .map(sectionThis -> new SectionFromDbDTO(sectionThis))
+                .collect(Collectors.toList());
+    }
 }

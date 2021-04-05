@@ -6,7 +6,6 @@ import com.diary_online.diary_online.model.dao.SectionDbDAO;
 import com.diary_online.diary_online.model.dao.UserDAO;
 import com.diary_online.diary_online.model.dto.LoginUserDTO;
 import com.diary_online.diary_online.model.dto.SafeUserDTO;
-import com.diary_online.diary_online.model.dto.SectionFromDbDTO;
 import com.diary_online.diary_online.model.pojo.Section;
 import com.diary_online.diary_online.model.pojo.User;
 import com.diary_online.diary_online.repository.SectionRepository;
@@ -124,6 +123,10 @@ public class UserService {
     }
 
     public String followUser(int userId, int userToFollowId) {
+        //not allow user to follow himself
+        if(userId == userToFollowId){
+            throw new BadRequestException("You cannot follow yourself.");
+        }
         //check if the user exists
         if (userRepository.findById(userId).isEmpty()) {
             throw new BadRequestException("Something went wrong while trying to execute your request.");
@@ -209,8 +212,8 @@ public class UserService {
         //save the new info
         userRepository.save(meUser);
         User userUpdated = userRepository.findById(meUser.getId()).get();
-        return "Successfully updated. New info: \n" + userUpdated.getUsername() + "\n" + userUpdated.getFirstName() + "\n"
-                + userUpdated.getLastName() + "\n" + userUpdated.getEmail();
+        return "Successfully updated. New info: username:" + userUpdated.getUsername() + "|firstName:" +
+                userUpdated.getFirstName() + "|lastName:" + userUpdated.getLastName() + "|email:" + userUpdated.getEmail();
     }
 
     public List<User> showMyFollowers(int userId) {
@@ -218,12 +221,5 @@ public class UserService {
             throw new BadRequestException("The user is invalid.");
         }
         return userDAO.showFollowers(userId);
-    }
-
-    public List<SectionFromDbDTO> showSharedSectionsWithMe(int userId) {
-        if(userRepository.findById(userId).isEmpty()){
-            throw new BadRequestException("The user is invalid.");
-        }
-        return sectionDbDAO.getSharedWithMeSection(userId);
     }
 }
