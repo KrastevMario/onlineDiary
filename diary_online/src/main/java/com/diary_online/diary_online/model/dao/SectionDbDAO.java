@@ -2,7 +2,7 @@ package com.diary_online.diary_online.model.dao;
 
 import com.diary_online.diary_online.exceptions.BadRequestException;
 import com.diary_online.diary_online.exceptions.NotFoundException;
-import com.diary_online.diary_online.model.dto.SectionFromDbDTO;
+import com.diary_online.diary_online.model.dto.SectionDTO;
 import com.diary_online.diary_online.model.pojo.Diary;
 import com.diary_online.diary_online.model.pojo.Section;
 import com.diary_online.diary_online.repository.DiaryRepository;
@@ -132,7 +132,7 @@ public class SectionDbDAO {
         }
     }
 
-    public String removeLike(int userId, int sectionId) {
+    public int removeLike(int userId, int sectionId) {
         if (sectionRepository.findById(sectionId).isEmpty()) {
             throw new NotFoundException("The section is invalid.");
         }
@@ -149,7 +149,7 @@ public class SectionDbDAO {
                 pr.setInt(1, sectionId);
                 pr.setInt(2, userId);
                 pr.executeUpdate();
-                return "like removed successful";
+                return likesCount(sectionId) - 1;
             }
             throw new BadRequestException("You never like this section");
         } catch (SQLException e) {
@@ -158,7 +158,7 @@ public class SectionDbDAO {
         throw new NotFoundException("connection fail");
     }
 
-    public String removeDislike(int userId, int sectionId) {
+    public int removeDislike(int userId, int sectionId) {
         if (sectionRepository.findById(sectionId).isEmpty()) {
             throw new NotFoundException("The section is invalid.");
         }
@@ -176,7 +176,7 @@ public class SectionDbDAO {
                 pr.setInt(1, sectionId);
                 pr.setInt(2, userId);
                 pr.executeUpdate();
-                return "dislike removed successful";
+                return dislikesCount(sectionId) - 1;
             }
             throw new BadRequestException("You never dislike this section");
         } catch (SQLException e) {
@@ -201,7 +201,7 @@ public class SectionDbDAO {
         return false;
     }
 
-    public String removeShare(int userId, int sectionId) {
+    public void removeShare(int userId, int sectionId) {
         try (Connection connection = jdbcTemplate.getDataSource().getConnection();) {
 
             String deleteQuery = "DELETE FROM shared_sections WHERE section_id = ? AND user_id = ?";
@@ -209,7 +209,7 @@ public class SectionDbDAO {
             pr.setInt(1, sectionId);
             pr.setInt(2, userId);
             pr.executeUpdate();
-            return "Unshare section successful";
+            return;
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -244,10 +244,10 @@ public class SectionDbDAO {
         return list;
     }
 
-    public List<SectionFromDbDTO> getSharedWithMeSection(int userId) {
-        List<SectionFromDbDTO> list = new ArrayList<>();
+    public List<Section> getSharedWithMeSection(int userId) {
+        List<Section> list = new ArrayList<>();
 
-        String sql = "SELECT s.id,s.title,s.content,s.privacy,s.created_at FROM sections AS s\n" +
+        String sql = "SELECT s.id,s.title,s.content,s.privacy,s.created_at,diary_id FROM sections AS s\n" +
                 "JOIN shared_sections AS ss ON ss.section_id = s.id\n" +
                 "JOIN users AS u ON u.id = ss.user_id\n" +
                 "WHERE u.id = ?\n";
@@ -257,9 +257,10 @@ public class SectionDbDAO {
             ps.setInt(1, userId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                SectionFromDbDTO section = new SectionFromDbDTO(rs.getInt("id"), rs.getString("title"),
+                Section section = new Section(rs.getInt("id"), rs.getString("title"),
                         rs.getString("content"), rs.getString("privacy"),
-                        rs.getTimestamp("created_at").toLocalDateTime());
+                        rs.getTimestamp("created_at").toLocalDateTime(),
+                        diaryRepository.findById(rs.getInt("diary_id")).get());
 
 
                 list.add(section);
@@ -269,6 +270,38 @@ public class SectionDbDAO {
         }
 
         return list;
+    }
+
+    public int likesCount(int sectionId) {
+        String sql = "SELECT COUNT(*) AS quantity FROM sections_have_likes WHERE section_id = ?";
+        int numberOfLikes = 0;
+        try (Connection connection = jdbcTemplate.getDataSource().getConnection()) {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, sectionId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                numberOfLikes = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return numberOfLikes;
+    }
+
+    public int dislikesCount(int sectionId) {
+        String sql = "SELECT COUNT(*) AS quantity FROM sections_have_dislikes WHERE section_id = ?";
+        int numberOfDisLikes = 0;
+        try (Connection connection = jdbcTemplate.getDataSource().getConnection()) {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, sectionId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                numberOfDisLikes = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return numberOfDisLikes;
     }
 
 }

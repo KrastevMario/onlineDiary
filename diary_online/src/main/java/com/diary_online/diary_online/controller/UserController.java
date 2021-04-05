@@ -23,15 +23,15 @@ public class UserController extends AbstractController{
     SessionController sessionController;
 
     @PutMapping("/users")
-    public SuccessDTO addUser(@RequestBody User user, HttpSession session){
+    public UserDTO addUser(@RequestBody User user, HttpSession session){
         if(sessionController.isLoggedIn(session)){
             throw new AuthenticationException("You are already logged in");
         }
-        return new SuccessDTO(userService.addUser(user));
+        return new UserDTO(userService.addUser(user));
     }
 
     @PostMapping("/users")
-    public SuccessDTO loginUser(@RequestBody LoginUserDTO loginCredentials, HttpSession session){
+    public SafeUserDTO loginUser(@RequestBody LoginUserDTO loginCredentials, HttpSession session){
         //check if user is already logged in
         if(sessionController.isLoggedIn(session)){
             throw new AuthenticationException("You are already logged in");
@@ -39,7 +39,8 @@ public class UserController extends AbstractController{
         //login user
         User user = userService.login(loginCredentials);
         sessionController.loginUser(session, user.getId());
-        return new SuccessDTO("Logged in successfully!");
+        return new SafeUserDTO(user);
+
     }
 
     @GetMapping("/users/{id}")
@@ -78,15 +79,15 @@ public class UserController extends AbstractController{
     }
 
     @GetMapping("/followedUsers/public/section")
-    public List<SectionFromDbDTO> getPublicSectionFromFollowedUsers(HttpSession session){
+    public List<SectionDTO> getPublicSectionFromFollowedUsers(HttpSession session){
         if(!sessionController.isLoggedIn(session)){
             throw new AuthenticationException("You must be logged in to use this option.");
         }
         int userId = sessionController.getLoggedUser(session).getId();
-        List<SectionFromDbDTO> sectionsAfterCasting = new ArrayList<>(); //parsing the sections into their DTO
+        List<SectionDTO> sectionsAfterCasting = new ArrayList<>(); //parsing the sections into their DTO
         List<Section> sections = new ArrayList<>(userService.getPublicSectionFromFollowedUsers(userId)); //The crude sections
         for (Section section : sections){
-            sectionsAfterCasting.add(new SectionFromDbDTO(section));
+            sectionsAfterCasting.add(new SectionDTO(section));
         }
         return sectionsAfterCasting;
     }
@@ -127,11 +128,14 @@ public class UserController extends AbstractController{
     }
 
     @GetMapping("/users/shared/sections")
-    public List<SectionFromDbDTO> getSharedSectionsWitMe(HttpSession session){
+    public List<SectionDTO> getSharedSectionsWitMe(HttpSession session){
         if(!sessionController.isLoggedIn(session)){
             throw new AuthenticationException("You must be logged in to use this option.");
         }
         int userId = sessionController.getLoggedUser(session).getId();
-        return userService.showSharedSectionsWithMe(userId);
+        return userService.showSharedSectionsWithMe(userId)
+                .stream()
+                .map(section -> new SectionDTO(section))
+                .collect(Collectors.toList());
     }
 }

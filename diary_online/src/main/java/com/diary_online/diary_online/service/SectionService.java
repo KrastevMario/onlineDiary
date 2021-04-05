@@ -5,6 +5,8 @@ import com.diary_online.diary_online.exceptions.BadRequestException;
 import com.diary_online.diary_online.exceptions.NotFoundException;
 import com.diary_online.diary_online.model.dao.SectionDbDAO;
 import com.diary_online.diary_online.model.dao.UserDAO;
+import com.diary_online.diary_online.model.dto.ReactedSectionDTO;
+import com.diary_online.diary_online.model.dto.SectionDTO;
 import com.diary_online.diary_online.model.pojo.Diary;
 import com.diary_online.diary_online.model.pojo.Section;
 import com.diary_online.diary_online.model.pojo.User;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,7 +35,7 @@ public class SectionService {
     @Autowired
     SectionDbDAO sectionDbDAO;
 
-    public String addSection(int userId, int diaryId, Section section) {
+    public Section addSection(int userId, int diaryId, Section section) {
 
         User currentUser = userRepository.findById(userId).get();
 
@@ -41,27 +44,27 @@ public class SectionService {
                 section.setCreatedAt(LocalDateTime.now());
                 section.setDiary(d);
                 sectionRepository.save(section);
-                return "Section added successful in " + section.getDiary().getTitle();
+                return section;
             }
         }
         throw new NotFoundException("Can't find the chosen diary.");
     }
 
-    public String deleteSection(int userId, int sectionId) {
+    public Section deleteSection(int userId, int sectionId) {
         User currentUser = userRepository.findById(userId).get();
 
         for (Diary d : currentUser.getDiaries()) {
             for (Section s: d.getSections()) {
                 if(s.getId() == sectionId){
                     sectionRepository.deleteById(sectionId);
-                    return "Section remove successful";
+                    return s;
                 }
             }
         }
         throw new NotFoundException("Cannot find the section " + sectionId + " in your diaries");
     }
 
-    public String updateSection(int sectionId, Section section,int userId) {
+    public Section updateSection(int sectionId, Section section,int userId) {
         User currentUser = userRepository.findById(userId).get();
 
         for (Diary d : currentUser.getDiaries()) {
@@ -73,7 +76,7 @@ public class SectionService {
                     sec.setPrivacy(section.getPrivacy());
                     sectionRepository.save(sec);
 
-                    return "Section update successful";
+                    return sec;
                 }
             }
         }
@@ -82,7 +85,7 @@ public class SectionService {
     }
 
     @Transactional
-    public String likeSection(int userId, int sectionId) {
+    public int likeSection(int userId, int sectionId) {
         boolean isMine = false;
         if(sectionRepository.findById(sectionId).isEmpty()){
             throw new BadRequestException("The section you are trying to like is invalid.");
@@ -95,6 +98,7 @@ public class SectionService {
             for (Section s: d.getSections()) {
                 if(s.getId() == sectionId){
                     isMine = true;
+                    break;
                 }
             }
         }
@@ -104,7 +108,7 @@ public class SectionService {
         }
 
         if((UtilSection.isVisible(section)) && (userDAO.isSectionSharedUser(section, user)
-                || isMine)){
+                || !isMine)){
 
             if(section.getDisLikers().contains(user)){
                 section.getDisLikers().remove(user);
@@ -113,14 +117,14 @@ public class SectionService {
 
             section.getLikers().add(user);
             sectionRepository.save(section);
-            return "You liked the section with title \"" + section.getTitle() + "\"";
+           return sectionDbDAO.likesCount(sectionId) + 1;
         }
 
         throw new NotFoundException("Cannot find the section");
     }
 
     @Transactional
-    public String dislikeSection(int userId, int sectionId) {
+    public int dislikeSection(int userId, int sectionId) {
         boolean isMine = false;
         if(sectionRepository.findById(sectionId).isEmpty()){
             throw new BadRequestException("The section you are trying to disLike is invalid.");
@@ -133,6 +137,7 @@ public class SectionService {
             for (Section s: d.getSections()) {
                 if(s.getId() == sectionId){
                     isMine = true;
+                    break;
                 }
             }
         }
@@ -142,7 +147,7 @@ public class SectionService {
         }
 
         if((UtilSection.isVisible(section)) && (userDAO.isSectionSharedUser(section, user)
-                || isMine)){
+                || !isMine)){
 
             if(section.getLikers().contains(user)){
                 section.getLikers().remove(user);
@@ -151,14 +156,14 @@ public class SectionService {
 
             section.getDisLikers().add(user);
             sectionRepository.save(section);
-            return "You disLiked the section with title \"" + section.getTitle() + "\"";
+           return sectionDbDAO.dislikesCount(sectionId) + 1;
         }
 
         throw new NotFoundException("Cannot find the section");
     }
 
 
-    public String shareSection(int myId,int shareUserId, int sectionId) {
+    public Section shareSection(int myId,int shareUserId, int sectionId) {
         Optional<Section> s = sectionRepository.findById(sectionId);
         if(!s.isPresent()){
             throw new NotFoundException("section not found");
@@ -190,13 +195,13 @@ public class SectionService {
                 if(sec.getId() == sectionId){
                     section.getUsersSharedWith().add(user);
                     sectionRepository.save(section);
-                    return "You shared section with id : " + sectionId + " with user with id " + shareUserId;                }
+                    return section;                }
             }
         }
         throw new NotFoundException("This section is not in your diaries");
     }
 
-    public String unshareSection(int myId, int userId, int sectionId) {
+    public Section unshareSection(int myId, int userId, int sectionId) {
         Optional<Section> s = sectionRepository.findById(sectionId);
         if(!s.isPresent()){
             throw new NotFoundException("section not found");
@@ -207,7 +212,8 @@ public class SectionService {
             for (Diary d : me.getDiaries()) {
                 for (Section sec: d.getSections()) {
                     if(sec.getId() == sectionId){
-                      return sectionDbDAO.removeShare(userId,sectionId);
+                       sectionDbDAO.removeShare(userId,sectionId);
+                       return sec;
                     }
                 }
             }
@@ -215,11 +221,19 @@ public class SectionService {
         throw new BadRequestException("You never share the section with this user");
     }
 
-    public List<Section> getMySections(int userId) {
+    public List<ReactedSectionDTO> getMySections(int userId) {
         if(userRepository.findById(userId).isEmpty()){
             throw new BadRequestException("The user is invalid.");
         }
-        return sectionDbDAO.getAllUserSections(userId);
+        List<ReactedSectionDTO> reactedSectionDTOS = new ArrayList<>();
+        List<Section> list = sectionDbDAO.getAllUserSections(userId);
+
+        for (Section s: list) {
+            int like = sectionDbDAO.likesCount(s.getId());
+            int dislike = sectionDbDAO.dislikesCount(s.getId());
+            reactedSectionDTOS.add(new ReactedSectionDTO(s,like,dislike));
+        }
+        return reactedSectionDTOS;
     }
 
     public List<Section> showSharedSectionsWithUser(int userId) {
@@ -229,15 +243,15 @@ public class SectionService {
         return sectionDbDAO.getSharedWithUserSections(userId);
     }
 
-    public String removeLike(int userId, int sectionId) {
-       return sectionDbDAO.removeLike(userId,sectionId);
+    public int removeLike(int userId, int sectionId) {
+        return sectionDbDAO.removeLike(userId,sectionId)+1 ;
     }
 
-    public String removeDislike(int userId, int sectionId) {
-       return sectionDbDAO.removeDislike(userId,sectionId);
+    public int removeDislike(int userId, int sectionId) {
+       return sectionDbDAO.removeDislike(userId,sectionId)+1;
     }
 
-    public Section getSection(int userId, int sectionId) {
+    public ReactedSectionDTO getSection(int userId, int sectionId) {
         User user = userRepository.findById(userId).get();
         Optional<Section> s = sectionRepository.findById(sectionId);
 
@@ -248,7 +262,9 @@ public class SectionService {
         for (Diary d:user.getDiaries()) {
             for (Section sec:d.getSections()) {
                 if(sec.getId() == sectionId){
-                    return sec;
+                    int like = sectionDbDAO.likesCount(sectionId);
+                    int dislike = sectionDbDAO.dislikesCount(sectionId);
+                    return new ReactedSectionDTO(sec,like,dislike);
                 }
             }
         }

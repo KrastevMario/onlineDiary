@@ -6,7 +6,7 @@ import com.diary_online.diary_online.model.dao.SectionDbDAO;
 import com.diary_online.diary_online.model.dao.UserDAO;
 import com.diary_online.diary_online.model.dto.LoginUserDTO;
 import com.diary_online.diary_online.model.dto.SafeUserDTO;
-import com.diary_online.diary_online.model.dto.SectionFromDbDTO;
+import com.diary_online.diary_online.model.dto.SectionDTO;
 import com.diary_online.diary_online.model.pojo.Section;
 import com.diary_online.diary_online.model.pojo.User;
 import com.diary_online.diary_online.repository.SectionRepository;
@@ -40,26 +40,26 @@ public class UserService {
     UserDAO userDAO;
 
 
-    public String addUser(User user) {
+    public User addUser(User user) {
         //verify all data
         //check if all the info is different than Null
         if (user == null) {
-            return "Invalid info!";
+            throw new BadRequestException("Invalid info!");
         }
         if(user.getEmail() == null || user.getEmail().isBlank()){
-            return "Please insert an email. Registration failed.";
+            throw new BadRequestException("Please insert an email. Registration failed.");
         }
         if(user.getUsername() == null || user.getUsername().isBlank()){
-            return "Please insert a username. Registration failed.";
+            throw new BadRequestException("Please insert a username. Registration failed.");
         }
         if(user.getFirstName() == null || user.getFirstName().isBlank()){
-            return "Please insert your first name. Registration failed.";
+            throw new BadRequestException("Please insert your first name. Registration failed.");
         }
         if(user.getLastName() == null || user.getLastName().isBlank()){
-            return "Please insert your last name. Registration failed.";
+            throw new BadRequestException("Please insert your last name. Registration failed.");
         }
         if(user.getPassword() == null || user.getPassword().isBlank()){
-            return "Please insert a password. Registration failed.";
+            throw new BadRequestException("Please insert a password. Registration failed.");
         }
 
         if (userRepository.existsByEmail(user.getEmail())) {
@@ -80,10 +80,9 @@ public class UserService {
         //set all data
         user.setPassword(pwdHashed);
         user.setCreatedAt(LocalDateTime.now());
-
         userRepository.save(user);
 
-        return "Successful registration";
+        return user;
     }
 
     public User login(LoginUserDTO loginCredentials) {
@@ -220,7 +219,7 @@ public class UserService {
         return userDAO.showFollowers(userId);
     }
 
-    public List<SectionFromDbDTO> showSharedSectionsWithMe(int userId) {
+    public List<Section> showSharedSectionsWithMe(int userId) {
         if(userRepository.findById(userId).isEmpty()){
             throw new BadRequestException("The user is invalid.");
         }
